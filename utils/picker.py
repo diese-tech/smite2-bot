@@ -100,6 +100,11 @@ def pick_team(gods_data: dict, role: str | None, source: str,
 
         # Weighted selection without replacement on remaining pool
         weights = [_get_god_weight(g, gods_data) for g in candidates]
+
+        # Safety: if all weights are 0 or invalid, fall back to uniform
+        if not any(w > 0 for w in weights):
+            weights = [1.0] * len(candidates)
+
         selected = []
         remaining = list(range(len(candidates)))
         remaining_weights = list(weights)
