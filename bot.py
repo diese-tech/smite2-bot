@@ -85,6 +85,8 @@ async def on_message(message: discord.Message):
                 _tracked_messages[sent.id] = {
                     "kind": "rg", "god": god, "channel_id": channel_id,
                     "role": intent["role"], "source": intent["source"],
+                    "author_id": message.author.id,
+                    "author_name": message.author.display_name,
                 }
                 await sent.add_reaction("✅")
                 await sent.add_reaction("❌")
@@ -104,6 +106,8 @@ async def on_message(message: discord.Message):
                 _tracked_messages[sent.id] = {
                     "kind": "roll5", "gods": gods, "channel_id": channel_id,
                     "role": intent["role"], "source": intent["source"],
+                    "author_id": message.author.id,
+                    "author_name": message.author.display_name,
                 }
                 for emoji in NUMBER_EMOJIS:
                     await sent.add_reaction(emoji)
@@ -202,41 +206,37 @@ async def on_raw_reaction_add(payload: discord.RawReactionActionEvent):
         del _tracked_messages[message_id]
         return
 
-    # Get the user who reacted
-    guild = client.get_guild(payload.guild_id) if payload.guild_id else None
-    if guild:
-        member = guild.get_member(payload.user_id) or await guild.fetch_member(payload.user_id)
-        user_name = member.display_name
-    else:
-        user = client.get_user(payload.user_id) or await client.fetch_user(payload.user_id)
-        user_name = user.display_name
+    # The pick is assigned to whoever typed the command (author),
+    # not whoever tapped the reaction. Anyone can tap to choose.
+    author_id = info["author_id"]
+    author_name = info["author_name"]
 
     # ---- Roll5 reaction ----
     if info["kind"] == "roll5" and emoji in NUMBER_EMOJIS:
         index = NUMBER_EMOJIS.index(emoji)
-        god = session.lock_roll5_pick(message_id, index, payload.user_id, user_name)
+        god = session.lock_roll5_pick(message_id, index, author_id, author_name)
         if god:
             embed = formatter.format_roll5_locked(
-                info["gods"], index, user_name,
+                info["gods"], index, author_name,
                 info["role"], info["source"],
             )
             await msg.edit(embed=embed)
             await msg.clear_reactions()
             del _tracked_messages[message_id]
-            log.info(f"Session pick: {user_name} selected {god} in channel {channel_id}")
+            log.info(f"Session pick: {author_name} assigned {god} in channel {channel_id}")
 
     # ---- RG reaction ----
     elif info["kind"] == "rg":
         if emoji == "✅":
-            god = session.lock_rg_pick(message_id, payload.user_id, user_name)
+            god = session.lock_rg_pick(message_id, author_id, author_name)
             if god:
                 embed = formatter.format_rg_locked(
-                    god, user_name, info["role"], info["source"],
+                    god, author_name, info["role"], info["source"],
                 )
                 await msg.edit(embed=embed)
                 await msg.clear_reactions()
                 del _tracked_messages[message_id]
-                log.info(f"Session pick: {user_name} selected {god} in channel {channel_id}")
+                log.info(f"Session pick: {author_name} assigned {god} in channel {channel_id}")
         elif emoji == "❌":
             god = session.discard_rg(message_id)
             if god:
