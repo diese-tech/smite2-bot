@@ -257,5 +257,7 @@ def format_help() -> str:
         "\n"
         "UTILITY\n"
         "  .help            Show this list\n"
+        "\n"
+        "GodForge v1.5\n"
         "```"
     )

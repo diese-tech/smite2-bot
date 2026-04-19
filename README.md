@@ -145,3 +145,19 @@ God portraits are pulled from SmiteFire's CDN (`smitefire.com/images/v2/god/icon
 - Session state lives in memory only — it resets if the bot restarts or redeploys. This is fine for sessions that last ~15 minutes.
 - Run `python test_bot.py` from a terminal to verify logic locally before deploying.
 - Run `python test_bot.py --sim` (optionally `--sim 5000`) to simulate weighted `.roll5` distribution.
+
+## Versioning
+
+Version bumps happen when user-facing behavior changes — new commands, changed command behavior, or new features. Internal changes (hardening, data edits, README updates, bug fixes) do not bump the version.
+
+The current version is displayed in the `.help` command footer. Update the version string in `utils/formatter.py` inside `format_help()` when shipping a new feature.
+
+| Version | Changes |
+|---------|---------|
+| 1.0 | Initial bot — god picks, builds, all pools populated |
+| 1.1 | Embed formatting with god portraits and buff-themed colors |
+| 1.2 | `.roll5`, `.rc`, optional build count (1-5) |
+| 1.3 | `.help` command |
+| 1.4 | Role-based weighting for `.roll5` |
+| 1.5 | Sessions — reaction-based picks, god exclusion tracking |
+
