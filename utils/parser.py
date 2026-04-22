@@ -15,6 +15,10 @@ Recognized command shapes:
     .adc/.adcstr/.adchyb [N]-> ADC build, optional count 1-5
     .sup [N]                -> support build, optional count 1-5
     .help                   -> show command reference
+    .session start/end/show/reset -> session management
+    .draft start/show/next/end/undo -> fearless draft management
+    .ban GodName            -> ban a god (during active draft)
+    .pick GodName           -> pick a god (during active draft)
 
 Returns a dict describing the parsed intent, or None if not a recognized command.
 """
@@ -93,6 +97,27 @@ def parse(message: str):
         rest = cmd[7:].strip()
         if rest in ("start", "end", "show", "reset"):
             return {"kind": "session", "action": rest}
+        return None
+
+    # ---- Draft commands: .draft start/show/next/end/undo ----
+    if cmd.startswith("draft"):
+        rest = cmd[5:].strip()
+        if rest.startswith("start"):
+            return {"kind": "draft", "action": "start"}
+        if rest in ("show", "next", "end", "undo"):
+            return {"kind": "draft", "action": rest}
+        return None
+
+    # ---- Ban/Pick: .ban GodName / .pick GodName ----
+    if cmd.startswith("ban "):
+        god_input = message[1:].strip()[4:].strip()  # preserve original casing
+        if god_input:
+            return {"kind": "draft_action", "action": "ban", "god_input": god_input}
+        return None
+    if cmd.startswith("pick "):
+        god_input = message[1:].strip()[5:].strip()  # preserve original casing
+        if god_input:
+            return {"kind": "draft_action", "action": "pick", "god_input": god_input}
         return None
 
     # ---- Roll5 commands: .roll5[role][source] ----

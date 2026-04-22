@@ -73,6 +73,31 @@ Gods in open (unresolved) rolls are also excluded from new rolls, preventing the
 
 Without an active session, `.rg` and `.roll5` behave normally (no reactions, no tracking).
 
+### Draft (fearless competitive drafting)
+
+| Command                        | Result                                    |
+|--------------------------------|-------------------------------------------|
+| `.draft start @blue @red`      | Start a fearless draft set                |
+| `.ban GodName`                 | Ban a god (must be your turn)             |
+| `.pick GodName`                | Pick a god (must be your turn)            |
+| `.draft show`                  | Full draft history + fearless pool        |
+| `.draft next`                  | Lock current game, advance to next        |
+| `.draft undo`                  | Undo the last ban, pick, or game advance  |
+| `.draft end`                   | End set, post summary + JSON export       |
+
+**How it works:**
+
+1. Two captains are assigned (blue and red) when the draft starts
+2. Bot posts a living embed (draft board) showing bans, picks, and whose turn it is
+3. Turn order follows Smite 1 classic format (6 bans, 6 picks, 4 bans, 4 picks per game)
+4. Bot enforces turn order — only the correct captain can ban/pick on their turn
+5. When a game completes, `.draft next` advances to the next game. All **picks** (not bans) from completed games go into the fearless pool and are unavailable for the rest of the set
+6. `.draft end` posts a summary embed and attaches a JSON file with the full draft record
+
+**God name matching:** Captains can type full names (`Baron Samedi`), aliases (`bs`, `mlf`, `swk`), or prefixes (`baron`, `pos`). Matching is case-insensitive. Aliases are defined in `data/aliases.json`.
+
+Sessions and drafts are mutually exclusive per channel — you cannot have both active at once.
+
 ### Utility
 
 | Command | Result                  |
@@ -122,12 +147,15 @@ smite2-bot/
   data/
     gods.json         # roster, role pools, weights
     builds.json       # item master + role/type build pools
+    aliases.json      # god name shorthand aliases for draft commands
   utils/
     parser.py         # command string -> intent dict
     picker.py         # random selection with exclusion + weighting
     loader.py         # JSON loading + caching
     formatter.py      # intent + result -> Discord embed or string
-    session.py        # per-channel draft session tracking
+    session.py        # per-channel random draft session tracking
+    draft.py          # per-channel fearless competitive draft system
+    resolver.py       # god name resolution (exact/alias/prefix matching)
 ```
 
 ## Updating data
@@ -160,4 +188,5 @@ The current version is displayed in the `.help` command footer. Update the versi
 | 1.3 | `.help` command |
 | 1.4 | Role-based weighting for `.roll5` |
 | 1.5 | Sessions — reaction-based picks, god exclusion tracking |
+| 1.6 | Fearless draft system, god name resolver with aliases |
 

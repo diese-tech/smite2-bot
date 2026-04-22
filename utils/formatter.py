@@ -255,9 +255,199 @@ def format_help() -> str:
         "  During a session, .rg and .roll5 get reactions to lock picks.\n"
         "  Picked gods are excluded from future rolls.\n"
         "\n"
+        "DRAFT  (fearless competitive drafting)\n"
+        "  .draft start @blue @red  Start a fearless draft set\n"
+        "  .draft show              Full draft history + fearless pool\n"
+        "  .draft next              Lock game, advance to next in set\n"
+        "  .draft end               End set, export JSON record\n"
+        "  .draft undo              Undo the last ban or pick\n"
+        "  .ban GodName             Ban a god (must be your turn)\n"
+        "  .pick GodName            Pick a god (must be your turn)\n"
+        "  Aliases work: .ban mlf = Morgan Le Fay, .pick baron = Baron Samedi\n"
+        "\n"
         "UTILITY\n"
         "  .help            Show this list\n"
         "\n"
-        "GodForge v1.5\n"
+        "GodForge v1.6\n"
         "```"
+    )
+
+
+# ---- Draft formatting ----
+
+BLUE_COLOR = 0x3498DB
+RED_COLOR = 0xE74C3C
+DRAFT_COLOR = 0x2C2F33  # dark gray for neutral draft embeds
+
+
+def _pad_list(items: list[str], target: int, placeholder: str = "—") -> list[str]:
+    """Pad a list to target length with placeholder strings."""
+    return items + [placeholder] * (target - len(items))
+
+
+def format_draft_board(draft) -> discord.Embed:
+    """Living embed showing current game state."""
+    from utils.draft import get_phase_label
+    game = draft.current_game
+    turn = game.current_turn()
+    phase = get_phase_label(game.step)
+
+    if turn:
+        team, action = turn
+        captain = draft.blue_captain["name"] if team == "blue" else draft.red_captain["name"]
+        team_emoji = "🔵" if team == "blue" else "🔴"
+        status = f"{team_emoji} **{captain}** — {action}"
+    else:
+        status = "✅ Game complete! Use `.draft next` or `.draft end`"
+
+    title = f"📋 Draft {draft.draft_id} — Game {game.game_number} — {phase}"
+    embed = discord.Embed(title=title, color=DRAFT_COLOR)
+
+    # Bans - side by side
+    blue_bans = _pad_list(game.bans["blue"], 5)
+    red_bans = _pad_list(game.bans["red"], 5)
+    embed.add_field(name="🔵 Blue Bans", value="\n".join(blue_bans), inline=True)
+    embed.add_field(name="\u2800", value="\u2800", inline=True)  # spacer
+    embed.add_field(name="🔴 Red Bans", value="\n".join(red_bans), inline=True)
+
+    # Picks - side by side
+    blue_picks = _pad_list(game.picks["blue"], 5)
+    red_picks = _pad_list(game.picks["red"], 5)
+    embed.add_field(name="🔵 Blue Picks", value="\n".join(blue_picks), inline=True)
+    embed.add_field(name="\u2800", value="\u2800", inline=True)  # spacer
+    embed.add_field(name="🔴 Red Picks", value="\n".join(red_picks), inline=True)
+
+    # Fearless pool
+    if draft.fearless_pool:
+        fearless = ", ".join(sorted(draft.fearless_pool))
+        embed.add_field(name="🚫 Fearless Pool", value=fearless, inline=False)
+
+    embed.add_field(name="⏳ Current Turn", value=status, inline=False)
+    embed.set_footer(text=f"GodForge v1.6 • Draft {draft.draft_id}")
+    return embed
+
+
+def format_draft_show(draft) -> discord.Embed:
+    """Full history embed — all games + fearless pool."""
+    embed = discord.Embed(
+        title=f"📋 Draft {draft.draft_id} — Full History",
+        color=DRAFT_COLOR,
+    )
+
+    # Captains
+    embed.add_field(
+        name="Captains",
+        value=f"🔵 {draft.blue_captain['name']}  vs  🔴 {draft.red_captain['name']}",
+        inline=False,
+    )
+
+    # Completed games
+    for game in draft.completed_games:
+        blue_picks = ", ".join(game.picks["blue"]) or "None"
+        red_picks = ", ".join(game.picks["red"]) or "None"
+        blue_bans = ", ".join(game.bans["blue"]) or "None"
+        red_bans = ", ".join(game.bans["red"]) or "None"
+        embed.add_field(
+            name=f"Game {game.game_number}",
+            value=(
+                f"🔵 Picks: {blue_picks}\n"
+                f"🔴 Picks: {red_picks}\n"
+                f"🔵 Bans: {blue_bans}\n"
+                f"🔴 Bans: {red_bans}"
+            ),
+            inline=False,
+        )
+
+    # Current game (if it has activity)
+    cg = draft.current_game
+    if cg.step > 0:
+        blue_picks = ", ".join(cg.picks["blue"]) or "None"
+        red_picks = ", ".join(cg.picks["red"]) or "None"
+        blue_bans = ", ".join(cg.bans["blue"]) or "None"
+        red_bans = ", ".join(cg.bans["red"]) or "None"
+        status = "✅ Complete" if cg.is_complete() else "🔄 In Progress"
+        embed.add_field(
+            name=f"Game {cg.game_number} ({status})",
+            value=(
+                f"🔵 Picks: {blue_picks}\n"
+                f"🔴 Picks: {red_picks}\n"
+                f"🔵 Bans: {blue_bans}\n"
+                f"🔴 Bans: {red_bans}"
+            ),
+            inline=False,
+        )
+
+    # Fearless pool
+    if draft.fearless_pool:
+        fearless = ", ".join(sorted(draft.fearless_pool))
+    else:
+        fearless = "None yet"
+    embed.add_field(name="🚫 Fearless Pool", value=fearless, inline=False)
+
+    embed.set_footer(text=f"GodForge v1.6 • Draft {draft.draft_id}")
+    return embed
+
+
+def format_draft_end(draft, export: dict) -> discord.Embed:
+    """Final summary when draft set ends."""
+    embed = discord.Embed(
+        title=f"🏁 Draft {draft.draft_id} — Complete",
+        color=0x2ECC71,
+    )
+
+    embed.add_field(
+        name="Captains",
+        value=f"🔵 {draft.blue_captain['name']}  vs  🔴 {draft.red_captain['name']}",
+        inline=False,
+    )
+
+    for game_data in export["games"]:
+        blue_picks = ", ".join(game_data["picks"]["blue"]) or "None"
+        red_picks = ", ".join(game_data["picks"]["red"]) or "None"
+        blue_bans = ", ".join(game_data["bans"]["blue"]) or "None"
+        red_bans = ", ".join(game_data["bans"]["red"]) or "None"
+        # Check if game was fully drafted (5 picks per side)
+        is_complete = (len(game_data["picks"]["blue"]) == 5
+                       and len(game_data["picks"]["red"]) == 5)
+        status = "✅" if is_complete else "⚠️ Incomplete"
+        embed.add_field(
+            name=f"Game {game_data['game_number']} {status}",
+            value=(
+                f"🔵 Picks: {blue_picks}\n"
+                f"🔴 Picks: {red_picks}\n"
+                f"🔵 Bans: {blue_bans}\n"
+                f"🔴 Bans: {red_bans}"
+            ),
+            inline=False,
+        )
+
+    if export["fearless_pool"]:
+        fearless = ", ".join(export["fearless_pool"])
+        embed.add_field(name="🚫 Fearless Pool", value=fearless, inline=False)
+
+    embed.set_footer(text=f"GodForge v1.6 • Draft {draft.draft_id}")
+    return embed
+
+
+def format_draft_action(team: str, action_type: str, god: str, draft_id: str) -> str:
+    """Short confirmation message after a ban or pick."""
+    emoji = "🔵" if team == "blue" else "🔴"
+    action_word = "banned" if action_type == "ban" else "picked"
+    return f"{emoji} **{god}** {action_word} • {draft_id}"
+
+
+def format_draft_undo(team: str, action_type: str, god: str) -> str:
+    """Confirmation of an undo."""
+    emoji = "🔵" if team == "blue" else "🔴"
+    action_word = "ban" if action_type == "ban" else "pick"
+    return f"↩️ Undid {emoji} {action_word} of **{god}**"
+
+
+def format_draft_next(draft) -> str:
+    """Confirmation of advancing to next game."""
+    fearless = ", ".join(sorted(draft.fearless_pool))
+    return (
+        f"✅ Game {draft.current_game.game_number - 1} locked! "
+        f"Starting **Game {draft.current_game.game_number}**.\n"
+        f"🚫 Fearless pool: {fearless}"
     )

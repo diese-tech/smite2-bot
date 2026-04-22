@@ -10,6 +10,7 @@ DATA_DIR = Path(__file__).parent.parent / "data"
 
 _gods_cache = None
 _builds_cache = None
+_aliases_cache = None
 
 
 def _load(filename: str) -> dict:
@@ -34,8 +35,18 @@ def builds() -> dict:
     return _builds_cache
 
 
+def aliases() -> dict:
+    """Load god name aliases. Keys starting with '_' are ignored (comments)."""
+    global _aliases_cache
+    if _aliases_cache is None:
+        raw = _load("aliases.json")
+        _aliases_cache = {k.lower(): v for k, v in raw.items() if not k.startswith("_")}
+    return _aliases_cache
+
+
 def reload():
     """Clear caches so next access re-reads from disk."""
-    global _gods_cache, _builds_cache
+    global _gods_cache, _builds_cache, _aliases_cache
     _gods_cache = None
     _builds_cache = None
+    _aliases_cache = None
