@@ -451,3 +451,39 @@ def format_draft_next(draft) -> str:
         f"Starting **Game {draft.current_game.game_number}**.\n"
         f"🚫 Fearless pool: {fearless}"
     )
+
+
+def format_claim_embed(team: str, picks: list[str], claims: dict,
+                       draft_id: str) -> discord.Embed:
+    """
+    Claim embed for one team. Players react 1️⃣-5️⃣ to claim their god.
+    claims dict: god_name -> {"user_id": ..., "name": ..., ...} or missing if unclaimed.
+    """
+    color = 0x3498DB if team == "blue" else 0xE74C3C
+    team_label = "🔵 Blue" if team == "blue" else "🔴 Red"
+
+    lines = []
+    all_claimed = True
+    for i, god in enumerate(picks):
+        if god in claims:
+            lines.append(f"{NUMBER_EMOJIS[i]} **{god}** → {claims[god]['name']}")
+        else:
+            lines.append(f"{NUMBER_EMOJIS[i]} **{god}**")
+            all_claimed = False
+
+    description = "\n".join(lines)
+
+    if all_claimed:
+        title = f"{team_label} Team — All claimed! ✅"
+    else:
+        title = f"{team_label} Team — Claim your god!"
+
+    embed = discord.Embed(title=title, description=description, color=color)
+    embed.set_footer(text=f"GodForge v1.6 • Draft {draft_id} • React to claim")
+    return embed
+
+
+def format_claim_undo(team: str, god: str, user_name: str) -> str:
+    """Confirmation of a claim undo."""
+    emoji = "🔵" if team == "blue" else "🔴"
+    return f"↩️ Undid {emoji} claim: **{user_name}** unclaimed **{god}**"

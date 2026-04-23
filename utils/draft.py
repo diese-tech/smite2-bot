@@ -36,8 +36,8 @@ TURN_SEQUENCE = [
     ("red", "pick"), ("red", "pick"), ("blue", "pick"),
     # Bans 2: R B R B
     ("red", "ban"), ("blue", "ban"), ("red", "ban"), ("blue", "ban"),
-    # Picks 2: R B B R
-    ("red", "pick"), ("blue", "pick"), ("blue", "pick"), ("red", "pick"),
+    # Picks 2: B R R B
+    ("blue", "pick"), ("red", "pick"), ("red", "pick"), ("blue", "pick"),
 ]
 
 STEPS_PER_GAME = len(TURN_SEQUENCE)
@@ -73,9 +73,45 @@ class GameState:
         self.bans = {"blue": [], "red": []}
         self.picks = {"blue": [], "red": []}
         self.step = 0
+        # Claims: god_name -> {"user_id": int, "name": str, "role": None, "stats": None}
+        # role and stats are reserved for future OCR/report features.
+        self.claims = {"blue": {}, "red": {}}
 
     def is_complete(self) -> bool:
         return self.step >= STEPS_PER_GAME
+
+    def is_fully_claimed(self) -> bool:
+        """True when all 10 picks have been claimed by players."""
+        for side in ("blue", "red"):
+            if len(self.claims[side]) < len(self.picks[side]):
+                return False
+        return self.is_complete()
+
+    def claim(self, team: str, god: str, user_id: int, user_name: str) -> bool:
+        """
+        Claim a god for a player. Returns True on success.
+        Fails if god isn't in this team's picks, already claimed,
+        or user already claimed a god on this team.
+        """
+        if god not in self.picks[team]:
+            return False
+        if god in self.claims[team]:
+            return False  # already claimed
+        # Check if user already claimed on this team
+        for info in self.claims[team].values():
+            if info["user_id"] == user_id:
+                return False
+        self.claims[team][god] = {
+            "user_id": user_id,
+            "name": user_name,
+            "role": None,
+            "stats": None,
+        }
+        return True
+
+    def unclaim(self, team: str, god: str) -> dict | None:
+        """Remove a claim. Returns the claim info or None."""
+        return self.claims[team].pop(god, None)
 
     def current_turn(self) -> tuple[str, str] | None:
         """Return (team, action) for current step, or None if game complete."""
@@ -115,10 +151,21 @@ class GameState:
 
     def to_dict(self) -> dict:
         """Export for JSON serialization."""
+        claims_export = {}
+        for side in ("blue", "red"):
+            claims_export[side] = {}
+            for god, info in self.claims[side].items():
+                claims_export[side][god] = {
+                    "user_id": info["user_id"],
+                    "name": info["name"],
+                    "role": info["role"],
+                    "stats": info["stats"],
+                }
         return {
             "game_number": self.game_number,
             "bans": {"blue": list(self.bans["blue"]), "red": list(self.bans["red"])},
             "picks": {"blue": list(self.picks["blue"]), "red": list(self.picks["red"])},
+            "claims": claims_export,
         }
 
 
@@ -158,11 +205,19 @@ class DraftState:
         # Living embed message ID (for editing).
         self.board_message_id = None
 
+        # Claim embed message IDs (blue, red) — for reaction tracking.
+        self.claim_message_ids = {"blue": None, "red": None}
+
     def _touch(self):
         self.last_updated = time.monotonic()
 
     def is_expired(self) -> bool:
         return (time.monotonic() - self.last_updated) > DRAFT_TTL_SECONDS
+
+    def is_claiming(self) -> bool:
+        """True when game is complete but claims are still open."""
+        return (self.current_game.is_complete()
+                and not self.current_game.is_fully_claimed())
 
     def get_unavailable_gods(self) -> set:
         """Gods that cannot be picked or banned in the current game."""
@@ -190,6 +245,14 @@ class DraftState:
         self._touch()
         return team, action
 
+    def claim_god(self, team: str, god: str, user_id: int, user_name: str) -> bool:
+        """Claim a god. Returns True on success."""
+        if not self.current_game.claim(team, god, user_id, user_name):
+            return False
+        self._undo_stack.append(("claim", {"team": team, "god": god}))
+        self._touch()
+        return True
+
     def undo(self) -> dict | None:
         """Undo the last action. Returns info dict or None."""
         if not self._undo_stack:
@@ -203,6 +266,12 @@ class DraftState:
                 team, action, god = result
                 self._touch()
                 return {"type": "step", "team": team, "action": action, "god": god}
+        elif action_type == "claim":
+            info = self.current_game.unclaim(data["team"], data["god"])
+            if info:
+                self._touch()
+                return {"type": "claim", "team": data["team"], "god": data["god"],
+                        "user_name": info["name"]}
         elif action_type == "next_game":
             prev_game = data["previous_game"]
             prev_fearless = data["previous_fearless"]
@@ -214,13 +283,15 @@ class DraftState:
 
         return None
 
-    def advance_game(self) -> bool:
+    def advance_game(self) -> str | None:
         """
         Advance to the next game. Current game's picks go to fearless pool.
-        Returns False if current game isn't complete.
+        Returns error string if not ready, None on success.
         """
         if not self.current_game.is_complete():
-            return False
+            return "Current game isn't complete yet. Finish all bans and picks first."
+        if not self.current_game.is_fully_claimed():
+            return "Not all players have claimed their gods yet."
 
         self._undo_stack.append(("next_game", {
             "previous_game": self.current_game,
@@ -234,8 +305,9 @@ class DraftState:
         self.current_game = GameState(
             game_number=len(self.completed_games) + 1
         )
+        self.claim_message_ids = {"blue": None, "red": None}
         self._touch()
-        return True
+        return None
 
     def end(self) -> dict:
         """End the draft. Returns the full export dict."""

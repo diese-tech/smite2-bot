@@ -48,6 +48,13 @@ drafts = DraftManager()
 # Track metadata for reaction-enabled messages (sessions only).
 _tracked_messages = {}
 
+# Server-specific reports channel. When a draft ends in a server listed here,
+# the JSON export is also posted to this channel. Other servers are unaffected.
+# Format: guild_id: reports_channel_id
+REPORTS_CHANNELS = {
+    1129404279808073758: 1496553890181550110,  # GodForge server -> #godforge-reports
+}
+
 
 def _channel_has_active(channel_id: int) -> str | None:
     """Check if a channel has an active session or draft. Returns type string or None."""
@@ -300,10 +307,16 @@ async def _handle_draft(intent: dict, message: discord.Message):
         draft = drafts.get(channel_id)
         if not draft:
             return formatter.format_error("No active draft in this channel.")
-        if not draft.current_game.is_complete():
-            return formatter.format_error("Current game isn't complete yet. Finish all bans and picks first.")
-        if not draft.advance_game():
-            return formatter.format_error("Failed to advance game.")
+
+        error = draft.advance_game()
+        if error:
+            return formatter.format_error(error)
+
+        # Clean up claim tracked messages from the completed game
+        for team in ("blue", "red"):
+            mid = draft.claim_message_ids.get(team)
+            if mid:
+                _tracked_messages.pop(mid, None)
 
         # Post confirmation
         await message.channel.send(formatter.format_draft_next(draft))
@@ -323,15 +336,33 @@ async def _handle_draft(intent: dict, message: discord.Message):
 
         export = draft.to_export_dict()
 
-        # Post summary embed
+        # Post summary embed in the draft channel
         embed = formatter.format_draft_end(draft, export)
         await message.channel.send(embed=embed)
 
-        # Attach JSON export as a file
+        # Attach JSON export as a file in the draft channel
         filename = draft.sanitized_filename()
         json_bytes = json.dumps(export, indent=2).encode("utf-8")
         file = discord.File(io.BytesIO(json_bytes), filename=filename)
         await message.channel.send(f"📎 Draft record: `{filename}`", file=file)
+
+        # Also post to the server's reports channel if configured
+        guild_id = message.guild.id if message.guild else None
+        if guild_id and guild_id in REPORTS_CHANNELS:
+            reports_ch = client.get_channel(REPORTS_CHANNELS[guild_id])
+            if reports_ch:
+                try:
+                    await reports_ch.send(embed=embed)
+                    report_file = discord.File(
+                        io.BytesIO(json_bytes), filename=filename
+                    )
+                    await reports_ch.send(
+                        f"📎 Draft record: `{filename}`", file=report_file
+                    )
+                    log.info(f"Draft {draft.draft_id} report posted to "
+                             f"reports channel {REPORTS_CHANNELS[guild_id]}")
+                except (discord.Forbidden, discord.HTTPException) as e:
+                    log.warning(f"Failed to post to reports channel: {e}")
 
         log.info(f"Draft {draft.draft_id} ended: {len(export['games'])} game(s), "
                  f"fearless pool: {export['fearless_pool']}")
@@ -349,6 +380,12 @@ async def _handle_draft(intent: dict, message: discord.Message):
             await message.channel.send(
                 formatter.format_draft_undo(result["team"], result["action"], result["god"])
             )
+        elif result["type"] == "claim":
+            await message.channel.send(
+                formatter.format_claim_undo(result["team"], result["god"], result["user_name"])
+            )
+            # Update the claim embed
+            await _update_claim_embed(draft, result["team"], message.channel)
         elif result["type"] == "next_game":
             await message.channel.send(
                 f"↩️ Undid game advance. Back to **Game {result['game_number']}**."
@@ -368,7 +405,11 @@ async def _handle_draft_action(intent: dict, message: discord.Message):
     if not draft:
         return formatter.format_error("No active draft in this channel. Use `.draft start` first.")
 
-    # Check if game is complete
+    # Check if we're in the claiming phase
+    if draft.is_claiming():
+        return formatter.format_error("Players are claiming gods. Use `.draft undo` if you need to fix something.")
+
+    # Check if game is complete (and fully claimed — ready for .draft next)
     turn = draft.get_current_team_and_action()
     if turn is None:
         return formatter.format_error("Current game is complete. Use `.draft next` or `.draft end`.")
@@ -414,6 +455,11 @@ async def _handle_draft_action(intent: dict, message: discord.Message):
 
     log.info(f"Draft {draft.draft_id}: {team} {action_done} {god} "
              f"(step {draft.current_game.step}/{20})")
+
+    # If game just completed, auto-post claim embeds
+    if draft.current_game.is_complete():
+        await _post_claim_embeds(draft, message.channel)
+
     return None
 
 
@@ -434,13 +480,57 @@ async def _update_draft_board(draft, channel):
     draft.board_message_id = sent.id
 
 
+async def _post_claim_embeds(draft, channel):
+    """Post claim embeds for both teams with 1️⃣-5️⃣ reactions."""
+    game = draft.current_game
+    for team in ("blue", "red"):
+        embed = formatter.format_claim_embed(
+            team, game.picks[team], game.claims[team], draft.draft_id
+        )
+        sent = await channel.send(embed=embed)
+        draft.claim_message_ids[team] = sent.id
+        # Track for reaction handling
+        _tracked_messages[sent.id] = {
+            "kind": "claim",
+            "team": team,
+            "picks": game.picks[team],
+            "channel_id": channel.id,
+            "draft_id": draft.draft_id,
+        }
+        for emoji in NUMBER_EMOJIS:
+            await sent.add_reaction(emoji)
+    log.info(f"Draft {draft.draft_id}: claim embeds posted for Game {game.game_number}")
+
+
+async def _update_claim_embed(draft, team, channel):
+    """Edit a claim embed after a player claims/unclaims."""
+    msg_id = draft.claim_message_ids.get(team)
+    if not msg_id:
+        return
+    try:
+        msg = await channel.fetch_message(msg_id)
+        game = draft.current_game
+        embed = formatter.format_claim_embed(
+            team, game.picks[team], game.claims[team], draft.draft_id
+        )
+        await msg.edit(embed=embed)
+        # If all claimed on this team, clear reactions
+        if all(god in game.claims[team] for god in game.picks[team]):
+            try:
+                await msg.clear_reactions()
+            except discord.Forbidden:
+                pass
+    except (discord.NotFound, discord.Forbidden, discord.HTTPException):
+        pass
+
+
 # ---------------------------------------------------------------------------
 # Reaction handler (sessions only)
 # ---------------------------------------------------------------------------
 
 @client.event
 async def on_raw_reaction_add(payload: discord.RawReactionActionEvent):
-    """Handle reactions on tracked roll messages."""
+    """Handle reactions on tracked messages (session rolls + draft claims)."""
     if payload.user_id == client.user.id:
         return
 
@@ -452,6 +542,15 @@ async def on_raw_reaction_add(payload: discord.RawReactionActionEvent):
     channel_id = info["channel_id"]
     emoji = str(payload.emoji)
 
+    # Route based on message kind
+    if info["kind"] in ("roll5", "rg"):
+        await _handle_session_reaction(payload, info, message_id, channel_id, emoji)
+    elif info["kind"] == "claim":
+        await _handle_claim_reaction(payload, info, message_id, channel_id, emoji)
+
+
+async def _handle_session_reaction(payload, info, message_id, channel_id, emoji):
+    """Handle reactions on session roll5/rg embeds."""
     async with sessions.get_lock(channel_id):
         session = sessions.get(channel_id)
         if not session:
@@ -522,6 +621,67 @@ async def on_raw_reaction_add(payload: discord.RawReactionActionEvent):
                     _tracked_messages.pop(message_id, None)
                     log.info(f"Session discard: {god} discarded "
                              f"in channel {channel_id}")
+
+
+async def _handle_claim_reaction(payload, info, message_id, channel_id, emoji):
+    """Handle reactions on draft claim embeds."""
+    if emoji not in NUMBER_EMOJIS:
+        return
+
+    async with drafts.get_lock(channel_id):
+        draft = drafts.get(channel_id)
+        if not draft:
+            return
+
+        channel = client.get_channel(channel_id)
+        if not channel:
+            return
+
+        try:
+            msg = await channel.fetch_message(message_id)
+        except (discord.NotFound, discord.Forbidden, discord.HTTPException):
+            _tracked_messages.pop(message_id, None)
+            return
+
+        team = info["team"]
+        picks = info["picks"]
+        index = NUMBER_EMOJIS.index(emoji)
+
+        if index >= len(picks):
+            return
+
+        god = picks[index]
+
+        # Get the display name of whoever reacted (they're claiming)
+        guild = client.get_guild(payload.guild_id) if payload.guild_id else None
+        if guild:
+            member = guild.get_member(payload.user_id)
+            if not member:
+                try:
+                    member = await guild.fetch_member(payload.user_id)
+                except (discord.NotFound, discord.Forbidden):
+                    return
+            user_name = member.display_name
+        else:
+            user = client.get_user(payload.user_id)
+            if not user:
+                try:
+                    user = await client.fetch_user(payload.user_id)
+                except (discord.NotFound, discord.Forbidden):
+                    return
+            user_name = user.display_name
+
+        # Attempt to claim
+        if draft.claim_god(team, god, payload.user_id, user_name):
+            log.info(f"Draft {draft.draft_id}: {user_name} claimed {god} ({team})")
+
+            # Update the claim embed
+            await _update_claim_embed(draft, team, channel)
+
+            # Check if both teams are fully claimed
+            if draft.current_game.is_fully_claimed():
+                log.info(f"Draft {draft.draft_id}: all claims complete for "
+                         f"Game {draft.current_game.game_number}")
 
 
 def main():
