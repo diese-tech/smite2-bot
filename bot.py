@@ -57,6 +57,7 @@ intents.members = True
 client = discord.Client(intents=intents)
 
 sessions = SessionManager()
+drafts = DraftManager()
 
 # Track metadata for reaction-enabled messages (sessions only).
 _tracked_messages = {}
