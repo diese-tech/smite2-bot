@@ -1,6 +1,6 @@
 # GodForge — Smite 2 Discord Bot
 
-A Discord bot for randomizing Smite 2 god picks and item builds, with session tracking for competitive drafts.
+A Discord bot for randomizing Smite 2 god picks and item builds, with session tracking, competitive drafting, and a match betting system.
 
 God picks render as colored embed cards with the god's portrait. Build commands return plaintext numbered lists.
 
@@ -75,6 +75,8 @@ Without an active session, `.rg` and `.roll5` behave normally (no reactions, no 
 
 ### Draft (fearless competitive drafting)
 
+The bot supports two draft modes. When `ACTIVITY_BACKEND_URL` is configured it connects to the Activity backend over HTTP and WebSocket. When the URL is not set it falls back to the local draft engine built into the bot.
+
 | Command                        | Result                                    |
 |--------------------------------|-------------------------------------------|
 | `.draft start @blue @red`      | Start a fearless draft set                |
@@ -94,9 +96,66 @@ Without an active session, `.rg` and `.roll5` behave normally (no reactions, no 
 5. When a game completes, `.draft next` advances to the next game. All **picks** (not bans) from completed games go into the fearless pool and are unavailable for the rest of the set
 6. `.draft end` posts a summary embed and attaches a JSON file with the full draft record
 
+**Activity backend mode:** When `ACTIVITY_BACKEND_URL` is set, `.draft start` registers the draft with the backend and opens a WebSocket listener. The draft board embed updates live as captains interact with the Discord Activity. Text commands (`.ban`, `.pick`, etc.) are forwarded to the backend.
+
+**Local fallback mode:** When `ACTIVITY_BACKEND_URL` is not set, the bot runs the draft engine locally. After `.draft start`, captains type `.ban` and `.pick` directly in the channel. When a game completes, claim embeds are posted with 1️⃣-5️⃣ reactions so players can assign gods to themselves.
+
 **God name matching:** Captains can type full names (`Baron Samedi`), aliases (`bs`, `mlf`, `swk`), or prefixes (`baron`, `pos`). Matching is case-insensitive. Aliases are defined in `data/aliases.json`.
 
 Sessions and drafts are mutually exclusive per channel — you cannot have both active at once.
+
+### Match betting (admin only)
+
+The betting system lets admins schedule matches and lets players wager points on outcomes. Betting commands are restricted to specific channels configured via environment variables (see Setup).
+
+#### Match lifecycle (admin)
+
+| Command                                        | Result                                                  |
+|------------------------------------------------|---------------------------------------------------------|
+| `.match create @TeamA @TeamB`                  | Create a match and open betting                         |
+| `.match draft GF-XXXX`                         | Lock betting, mark match in progress (run in handshake channel) |
+| `.match resolve GF-XXXX winner @Team`          | Pay out win bets and mark match completed               |
+| `.match resolve GF-XXXX prop @player stat val` | Settle an over/under prop bet                           |
+
+Match IDs are auto-assigned (`GF-0001`, `GF-0002`, …) and displayed in all responses.
+
+**Match statuses:**
+- `betting_open` — bets accepted
+- `in_progress` — draft active, betting locked
+- `completed` — winner resolved, win bets paid
+- `settled` — all props resolved, match fully closed
+
+#### Placing bets (players)
+
+Bets can only be placed in `#place-bets` while a match is `betting_open`.
+
+| Command | Result |
+|---------|--------|
+| `.bet GF-XXXX amount @Team win` | Bet on a team to win |
+| `.bet GF-XXXX amount @player stat over\|under threshold` | Bet on a player stat prop |
+
+Example: `.bet GF-0001 100 @Omega win` — bet 100 pts on Omega to win match GF-0001.
+Example: `.bet GF-0001 50 @SabrinaG kills over 10.5` — bet 50 pts that SabrinaG gets more than 10.5 kills.
+
+**Wallets:** Each player starts with 500 points, auto-seeded on their first bet. Points are deducted when a bet is placed and returned with winnings on resolution. Payouts use pool-proportional math: `payout = (your_bet / winning_side_pool) × total_pool`.
+
+#### Wallet management (admin)
+
+| Command                         | Result                                      |
+|---------------------------------|---------------------------------------------|
+| `.wallet give @player amount`   | Add points to a player's balance            |
+| `.wallet take @player amount`   | Remove points from a player's balance       |
+| `.wallet set @player amount`    | Set a player's balance to an exact amount   |
+| `.wallet check @player`         | Show a player's current balance             |
+| `.wallet wipe`                  | Reset all wallets to 500 pts (backs up first) |
+
+#### Ledger
+
+| Command        | Result                                               |
+|----------------|------------------------------------------------------|
+| `.ledger reset`| Clear all matches for a new week (wallets untouched) |
+
+The `#betting-ledger` channel displays a persistent paginated embed showing each match with its status, win pools, and prop breakdowns. Use ⬅️ ➡️ to page between matches. The embed updates automatically whenever a match is created, a bet is placed, or a result is posted.
 
 ### Utility
 
@@ -114,19 +173,27 @@ Sessions and drafts are mutually exclusive per channel — you cannot have both 
 2. **Create a Discord bot:**
    - Go to https://discord.com/developers/applications
    - New Application → Bot → copy the token
-   - Under Bot settings, enable **Message Content Intent**
-   - Use OAuth2 URL Generator with scopes `bot` and permissions `Send Messages` + `Read Message History` + `View Channels` + `Add Reactions` + `Manage Messages` to invite it to your server
+   - Under Bot settings, enable **Message Content Intent** and **Server Members Intent**
+   - Use OAuth2 URL Generator with scopes `bot` and permissions: `Send Messages`, `Read Message History`, `View Channels`, `Add Reactions`, `Manage Messages`, `Embed Links`
    - The bot needs `Add Reactions` to post reaction buttons and `Manage Messages` to clear reactions after a pick is locked
 
-3. **Configure the token:**
+3. **Configure environment variables:**
 
    For **local testing:**
    ```
    cp .env.example .env
    ```
-   Edit `.env` and paste your bot token.
+   Edit `.env` and fill in your values.
 
-   For **Railway / production:** set `DISCORD_TOKEN` as an environment variable in the platform's settings. The `.env` file is gitignored and only used locally.
+   For **Railway / production:** set each variable in the platform's environment settings. The `.env` file is gitignored and only used locally.
+
+   | Variable | Required | Description |
+   |----------|----------|-------------|
+   | `DISCORD_TOKEN` | Yes | Bot token from the Developer Portal |
+   | `BETTING_LEDGER_CHANNEL_ID` | Yes | Channel ID for `#betting-ledger` |
+   | `PLACE_BETS_CHANNEL_ID` | Yes | Channel ID for `#place-bets` |
+   | `ACTIVITY_BACKEND_URL` | No | URL of the Activity draft backend — omit to use local draft mode |
+   | `ACTIVITY_API_KEY` | No | API key for the Activity backend |
 
 4. **Run:**
    ```
@@ -136,7 +203,7 @@ Sessions and drafts are mutually exclusive per channel — you cannot have both 
 ## File layout
 
 ```
-smite2-bot/
+godforge/
   bot.py              # entry point, event handlers, reaction listener
   requirements.txt
   Procfile            # tells Railway/Heroku to run as a worker
@@ -148,14 +215,18 @@ smite2-bot/
     gods.json         # roster, role pools, weights
     builds.json       # item master + role/type build pools
     aliases.json      # god name shorthand aliases for draft commands
+    weekly_ledger.json# match history + bet records (reset each week)
+    wallets.json      # player point balances (persist across resets)
   utils/
     parser.py         # command string -> intent dict
     picker.py         # random selection with exclusion + weighting
     loader.py         # JSON loading + caching
     formatter.py      # intent + result -> Discord embed or string
     session.py        # per-channel random draft session tracking
-    draft.py          # per-channel fearless competitive draft system
+    draft.py          # per-channel fearless competitive draft system (local mode)
     resolver.py       # god name resolution (exact/alias/prefix matching)
+    ledger.py         # match lifecycle and bet logic
+    wallet.py         # player point balance persistence
 ```
 
 ## Updating data
@@ -170,7 +241,8 @@ God portraits are pulled from SmiteFire's CDN (`smitefire.com/images/v2/god/icon
 
 - Unknown commands are silently ignored, by design — keeps the bot quiet in busy channels.
 - Errors (empty pool, malformed JSON, etc.) are surfaced to the user with a `⚠️` prefix and logged to the console.
-- Session state lives in memory only — it resets if the bot restarts or redeploys. This is fine for sessions that last ~15 minutes.
+- Session and draft state lives in memory only — it resets if the bot restarts or redeploys. This is fine for sessions that last ~15 minutes.
+- Betting ledger and wallet data persist in `data/` JSON files and survive restarts.
 - Run `python test_bot.py` from a terminal to verify logic locally before deploying.
 - Run `python test_bot.py --sim` (optionally `--sim 5000`) to simulate weighted `.roll5` distribution.
 
@@ -189,4 +261,4 @@ The current version is displayed in the `.help` command footer. Update the versi
 | 1.4 | Role-based weighting for `.roll5` |
 | 1.5 | Sessions — reaction-based picks, god exclusion tracking |
 | 1.6 | Fearless draft system, god name resolver with aliases |
-
+| 2.0 | Match betting system — `.match`, `.bet`, `.wallet`, `.ledger`; persistent paginated ledger embed; Activity backend draft integration with local fallback |
