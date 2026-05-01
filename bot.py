@@ -253,7 +253,8 @@ async def on_message(message: discord.Message):
 
     try:
         if intent["kind"] == "help":
-            response = formatter.format_help()
+            await message.channel.send(embed=formatter.format_help_page1(), view=HelpView())
+            return
 
         elif intent["kind"] == "session":
             async with sessions.get_lock(channel_id):
@@ -972,6 +973,27 @@ class BettingLedgerView(discord.ui.View):
             _ledger_page = min(total - 1, _ledger_page + 1)
         embed = _build_ledger_embed(data, _ledger_page)
         await interaction.response.edit_message(embed=embed, view=self)
+
+
+class HelpView(discord.ui.View):
+    """Two-page paginated help embed (60 s timeout — no persistence needed)."""
+
+    def __init__(self, page: int = 0):
+        super().__init__(timeout=60)
+        self._page = page
+
+    @discord.ui.button(emoji="⬅️", style=discord.ButtonStyle.secondary)
+    async def prev(self, interaction: discord.Interaction, button: discord.ui.Button):
+        self._page = max(0, self._page - 1)
+        await interaction.response.edit_message(embed=self._current_embed(), view=self)
+
+    @discord.ui.button(emoji="➡️", style=discord.ButtonStyle.secondary)
+    async def next(self, interaction: discord.Interaction, button: discord.ui.Button):
+        self._page = min(1, self._page + 1)
+        await interaction.response.edit_message(embed=self._current_embed(), view=self)
+
+    def _current_embed(self) -> discord.Embed:
+        return formatter.format_help_page1() if self._page == 0 else formatter.format_help_page2()
 
 
 def _build_ledger_embed(data: dict, page: int) -> discord.Embed:

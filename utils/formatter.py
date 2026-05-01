@@ -219,58 +219,87 @@ def format_error(message: str) -> str:
     return f"⚠️ {message}"
 
 
-def format_help() -> str:
-    """Plaintext command reference, rendered as a Discord code block for monospace alignment."""
-    return (
-        "```\n"
-        "GodForge commands\n"
-        "\n"
-        "GODS\n"
-        "  .rg              Random god from full roster\n"
-        "  .rgj/m/a/s/o     Random god by role (jungle/mid/adc/support/solo)\n"
-        "  .rgjw            Same as .rgj (explicit website source)\n"
-        "  .rgjt            Random jungle god from in-game tab pool\n"
-        "  .roll5           5 random gods from full roster\n"
-        "  .roll5j          5 random gods of a role (same role/source rules as .rg)\n"
-        "\n"
-        "BUILDS  (add a number 1-5 for fewer items, e.g. .adcstr 3)\n"
-        "  .midint          Mid intelligence build\n"
-        "  .midstr          Mid strength build\n"
-        "  .jungint         Jungle intelligence build\n"
-        "  .jungstr         Jungle strength build\n"
-        "  .soloint         Solo intelligence build\n"
-        "  .solostr         Solo strength build\n"
-        "  .solohyb         Solo hybrid build\n"
-        "  .adc             Standard ADC build\n"
-        "  .adcstr          Strength-leaning ADC build\n"
-        "  .adchyb          Hybrid ADC build\n"
-        "  .sup             Support build\n"
-        "  .rc              Chaos build (6 random items, any role)\n"
-        "\n"
-        "SESSIONS  (track picks, prevent duplicates)\n"
-        "  .session start   Start a draft session in this channel\n"
-        "  .session show    Show all picks so far\n"
-        "  .session reset   Clear picks, keep session active\n"
-        "  .session end     End session, show final summary\n"
-        "  During a session, .rg and .roll5 get reactions to lock picks.\n"
-        "  Picked gods are excluded from future rolls.\n"
-        "\n"
-        "DRAFT  (fearless competitive drafting)\n"
-        "  .draft start @blue @red  Start a fearless draft set\n"
-        "  .draft show              Full draft history + fearless pool\n"
-        "  .draft next              Lock game, advance to next in set\n"
-        "  .draft end               End set, export JSON record\n"
-        "  .draft undo              Undo the last ban or pick\n"
-        "  .ban GodName             Ban a god (must be your turn)\n"
-        "  .pick GodName            Pick a god (must be your turn)\n"
-        "  Aliases work: .ban mlf = Morgan Le Fay, .pick baron = Baron Samedi\n"
-        "\n"
-        "UTILITY\n"
-        "  .help            Show this list\n"
-        "\n"
-        "GodForge v1.6\n"
-        "```"
-    )
+def format_help_page1() -> discord.Embed:
+    """Page 1 of the help embed: gods, builds, sessions, draft."""
+    embed = discord.Embed(title="GodForge Commands", color=0x3498DB)
+
+    embed.add_field(name="Gods", value=(
+        "`.rg` — random god from full roster\n"
+        "`.rgj/m/a/s/o` — random god by role\n"
+        "`.rgjt` / `.rgjw` — tab or website pool\n"
+        "`.roll5` — 5 random gods from full roster\n"
+        "`.roll5j` — 5 random gods of a role\n"
+        "_Same role/source suffixes apply to both._"
+    ), inline=False)
+
+    embed.add_field(name="Builds  (append 1–5 for fewer items)", value=(
+        "`.midint` / `.midstr`\n"
+        "`.jungint` / `.jungstr`\n"
+        "`.soloint` / `.solostr` / `.solohyb`\n"
+        "`.adc` / `.adcstr` / `.adchyb`\n"
+        "`.sup` — support\n"
+        "`.rc` — chaos (full pool)"
+    ), inline=False)
+
+    embed.add_field(name="Sessions  (track picks, prevent duplicates)", value=(
+        "`.session start` — start a session in this channel\n"
+        "`.session show` — show picks so far\n"
+        "`.session reset` — clear picks, keep session active\n"
+        "`.session end` — end session, show summary\n"
+        "_During a session, `.rg` and `.roll5` get reactions to lock picks._"
+    ), inline=False)
+
+    embed.add_field(name="Draft  (fearless competitive)", value=(
+        "`.draft start @blue @red` — start a draft set\n"
+        "`.draft show` — history + fearless pool\n"
+        "`.draft next` — advance to next game\n"
+        "`.draft undo` — undo last ban, pick, or advance\n"
+        "`.draft end` — end set, export JSON\n"
+        "`.ban GodName` / `.pick GodName` — your turn action\n"
+        "_Aliases work: `.ban mlf`, `.pick baron`_"
+    ), inline=False)
+
+    embed.set_footer(text="Page 1/2 — GodForge v2.0 • use ➡️ for betting commands")
+    return embed
+
+
+def format_help_page2() -> discord.Embed:
+    """Page 2 of the help embed: match betting, wallets, ledger."""
+    embed = discord.Embed(title="GodForge Commands — Betting", color=0x9B59B6)
+
+    embed.add_field(name="Match lifecycle  (admin only)", value=(
+        "`.match create @TeamA @TeamB` — open a match for betting\n"
+        "`.match draft GF-XXXX` — lock betting, mark in progress\n"
+        "`.match resolve GF-XXXX winner @Team` — pay out win bets\n"
+        "`.match resolve GF-XXXX prop @player stat value` — settle a prop"
+    ), inline=False)
+
+    embed.add_field(name="Placing bets  (#place-bets only)", value=(
+        "`.bet GF-XXXX amount @Team win`\n"
+        "`.bet GF-XXXX amount @player stat over|under threshold`\n"
+        "_You start with 500 pts, auto-seeded on your first bet._"
+    ), inline=False)
+
+    embed.add_field(name="Wallets  (admin only)", value=(
+        "`.wallet give @player amount`\n"
+        "`.wallet take @player amount`\n"
+        "`.wallet set @player amount`\n"
+        "`.wallet check @player`\n"
+        "`.wallet wipe` — reset all to 500 pts"
+    ), inline=False)
+
+    embed.add_field(name="Ledger  (admin only)", value=(
+        "`.ledger reset` — clear all matches for a new week\n"
+        "_#betting-ledger has a live paginated embed — use ⬅️ ➡️ to browse._"
+    ), inline=False)
+
+    embed.set_footer(text="Page 2/2 — GodForge v2.0 • use ⬅️ for main commands")
+    return embed
+
+
+def format_help() -> discord.Embed:
+    """Return page 1 (default entry point for .help)."""
+    return format_help_page1()
 
 
 # ---- Draft formatting ----
