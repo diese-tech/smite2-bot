@@ -160,9 +160,6 @@ async def _post_export(export: dict, channel) -> None:
 
 async def _listen_draft_ws(match_id: str, channel_id: int) -> None:
     """Connect to the Activity backend WebSocket and mirror state to the embed."""
-    ws_url = (ACTIVITY_BACKEND_URL
-              .replace("https://", "wss://")
-              .replace("http://", "ws://") + "/ws")
     ws_url = ACTIVITY_BACKEND_URL.replace("https://", "wss://").replace("http://", "ws://") + "/ws"
     try:
         async with aiohttp.ClientSession() as session:
@@ -665,38 +662,6 @@ async def _handle_draft_action_activity(intent: dict, message: discord.Message):
     god, error = resolve_god_name(intent["god_input"])
     if error:
         return formatter.format_error(error)
-    """Handle .ban / .pick routed through the Activity backend."""
-    channel_id = message.channel.id
-    match_id = _match_ids.get(channel_id)
-
-    if not match_id:
-        return formatter.format_error("No active draft. Use `.draft start` first.")
-
-    snapshot = _snapshots.get(channel_id)
-    if not snapshot:
-        return formatter.format_error("Draft state loading — try again in a moment.")
-
-    if snapshot.get("isClaiming"):
-        return formatter.format_error("Claiming phase active. Use `.draft undo` to go back.")
-
-    turn = snapshot.get("currentTurn")
-    if not turn:
-        return formatter.format_error("Game complete. Use `.draft next` or `.draft end`.")
-
-    action = intent["action"]
-    if action != turn["action"]:
-        return formatter.format_error(f"It's time to **{turn['action']}**, not {action}.")
-
-    expected_captain_id = snapshot.get("currentCaptainId")
-    if expected_captain_id and str(message.author.id) != expected_captain_id:
-        team = turn["team"]
-        captain_name = (snapshot["blueCaptain"]["name"] if team == "blue"
-                        else snapshot["redCaptain"]["name"])
-        return formatter.format_error(f"It's **{captain_name}**'s turn ({team}).")
-
-    god, error = resolve_god_name(intent["god_input"])
-    if error:
-        return formatter.format_error(error)
 
     result = await _activity_post(f"/api/draft/{match_id}/action", {
         "god": god,
@@ -723,8 +688,6 @@ async def _update_draft_board(draft, channel):
     sent = await channel.send(embed=formatter.format_draft_board(draft))
     draft.board_message_id = sent.id
 
-    log.info(f"Draft {match_id}: {turn['team']} {turn['action']} {god} via text command")
-    return None  # WS listener updates the embed
 
 async def _post_claim_embeds(draft, channel):
     """Post numbered claim embeds for both teams after a game completes."""
@@ -784,6 +747,8 @@ async def on_raw_reaction_add(payload: discord.RawReactionActionEvent):
 
     if info["kind"] in ("roll5", "rg"):
         await _handle_session_reaction(payload, info, message_id, channel_id, emoji)
+    elif info["kind"] == "claim":
+        await _handle_claim_reaction(payload, info, message_id, channel_id, emoji)
 
 
 async def _handle_claim_reaction(payload, info, message_id, channel_id, emoji):
