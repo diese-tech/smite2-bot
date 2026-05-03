@@ -870,7 +870,10 @@ def _is_admin(message: discord.Message) -> bool:
 
 
 def _extract_team_names(message: discord.Message) -> list[str]:
-    """Return up to 2 team name strings from a message (role > user > raw @word)."""
+    """Return up to 2 team name strings from a message.
+
+    Priority: role mentions → user mentions → quoted strings → raw @word.
+    """
     teams: list[str] = []
     for r in message.role_mentions:
         if len(teams) >= 2:
@@ -883,6 +886,15 @@ def _extract_team_names(message: discord.Message) -> list[str]:
         if name not in teams:
             teams.append(name)
     if len(teams) < 2:
+        # Quoted plain-text team names: .match create "Whiskey Whales" "Shadow Council"
+        for part in re.findall(r'"([^"]+)"', message.content):
+            if len(teams) >= 2:
+                break
+            name = f"@{part}"
+            if name not in teams:
+                teams.append(name)
+    if len(teams) < 2:
+        # Legacy: raw @word (single-word, no spaces)
         for part in re.findall(r'@([^\s<>@]+)', message.content):
             if len(teams) >= 2:
                 break
@@ -893,7 +905,11 @@ def _extract_team_names(message: discord.Message) -> list[str]:
 
 
 def _find_matching_team(message: discord.Message, stored_teams: list[str]) -> str | None:
-    """Return which stored team name is referenced in the message, or None."""
+    """Return which stored team name is referenced in the message, or None.
+
+    Priority: role mentions → user mentions → plain-text (with or without @).
+    Longer team names are checked first to prevent partial matches.
+    """
     for r in message.role_mentions:
         name = f"@{r.name}"
         if name in stored_teams:
@@ -902,9 +918,12 @@ def _find_matching_team(message: discord.Message, stored_teams: list[str]) -> st
         name = f"@{u.display_name}"
         if name in stored_teams:
             return name
+    # Plain-text fallback — longest names first so "Whiskey Whales" beats "Whales"
     content_lower = message.content.lower()
-    for team in stored_teams:
-        if team.lower() in content_lower:
+    for team in sorted(stored_teams, key=len, reverse=True):
+        if team.lower() in content_lower:          # legacy: "@Whiskey Whales" in content
+            return team
+        if team.lstrip("@").lower() in content_lower:  # new: "Whiskey Whales" in content
             return team
     return None
 
