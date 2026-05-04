@@ -43,6 +43,7 @@ ACTIVITY_API_KEY = os.getenv("ACTIVITY_API_KEY", "")
 # Set these in .env (or leave 0 to disable that feature).
 BETTING_LEDGER_CHANNEL_ID = int(os.getenv("BETTING_LEDGER_CHANNEL_ID", "0"))
 PLACE_BETS_CHANNEL_ID = int(os.getenv("PLACE_BETS_CHANNEL_ID", "0"))
+MATCH_DRAFT_CHANNEL_ID = int(os.getenv("MATCH_DRAFT_CHANNEL_ID", "0"))
 
 # Hardcoded owner — bypasses server permission checks on all commands.
 # Temporary until the dashboard backend handles auth.
@@ -1236,7 +1237,11 @@ async def _match_draft(message: discord.Message):
     match_id = parts[2].upper()
 
     channel_name = getattr(message.channel, "name", "")
-    if "handshake" not in channel_name.lower():
+    in_draft_channel = (
+        MATCH_DRAFT_CHANNEL_ID and message.channel.id == MATCH_DRAFT_CHANNEL_ID
+        or not MATCH_DRAFT_CHANNEL_ID and "handshake" in channel_name.lower()
+    )
+    if not in_draft_channel:
         await message.channel.send("⚠️ `.match draft` must be run in the team handshake channel.")
         return
 
