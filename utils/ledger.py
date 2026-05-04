@@ -15,21 +15,23 @@ from pathlib import Path
 
 LEDGER_PATH = Path("data/weekly_ledger.json")
 
-_EMPTY = {"matches": [], "embed_message_id": None, "embed_channel_id": None}
-
-
 # ---------------------------------------------------------------------------
 # Raw I/O
 # ---------------------------------------------------------------------------
 
+def _empty_ledger() -> dict:
+    """Return a fresh empty ledger dict (never reuse the same list reference)."""
+    return {"matches": [], "embed_message_id": None, "embed_channel_id": None}
+
+
 def load_ledger() -> dict:
     if not LEDGER_PATH.exists():
-        return dict(_EMPTY)
+        return _empty_ledger()
     try:
         with open(LEDGER_PATH, encoding="utf-8") as f:
             return json.load(f)
     except (json.JSONDecodeError, OSError):
-        return dict(_EMPTY)
+        return _empty_ledger()
 
 
 def save_ledger(data: dict):

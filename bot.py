@@ -43,6 +43,11 @@ ACTIVITY_API_KEY = os.getenv("ACTIVITY_API_KEY", "")
 # Set these in .env (or leave 0 to disable that feature).
 BETTING_LEDGER_CHANNEL_ID = int(os.getenv("BETTING_LEDGER_CHANNEL_ID", "0"))
 PLACE_BETS_CHANNEL_ID = int(os.getenv("PLACE_BETS_CHANNEL_ID", "0"))
+MATCH_DRAFT_CHANNEL_ID = int(os.getenv("MATCH_DRAFT_CHANNEL_ID", "0"))
+
+# Hardcoded owner — bypasses server permission checks on all commands.
+# Temporary until the dashboard backend handles auth.
+_GOD_USER_ID = 146116042182098944
 
 logging.basicConfig(
     level=logging.INFO,
@@ -863,14 +868,19 @@ async def _handle_session_reaction(payload, info, message_id, channel_id, emoji)
 # ── Betting system — shared helpers ──────────────────────────────────────────
 
 def _is_admin(message: discord.Message) -> bool:
-    """True if the message author has server administrator permission."""
+    """True if the author is the bot owner or has server administrator permission."""
+    if message.author.id == _GOD_USER_ID:
+        return True
     member = message.author
     perms = getattr(member, "guild_permissions", None)
     return bool(perms and perms.administrator)
 
 
 def _extract_team_names(message: discord.Message) -> list[str]:
-    """Return up to 2 team name strings from a message (role > user > raw @word)."""
+    """Return up to 2 team name strings from a message.
+
+    Priority: role mentions → user mentions → quoted strings → raw @word.
+    """
     teams: list[str] = []
     for r in message.role_mentions:
         if len(teams) >= 2:
@@ -883,6 +893,15 @@ def _extract_team_names(message: discord.Message) -> list[str]:
         if name not in teams:
             teams.append(name)
     if len(teams) < 2:
+        # Quoted plain-text team names: .match create "Whiskey Whales" "Shadow Council"
+        for part in re.findall(r'"([^"]+)"', message.content):
+            if len(teams) >= 2:
+                break
+            name = f"@{part}"
+            if name not in teams:
+                teams.append(name)
+    if len(teams) < 2:
+        # Legacy: raw @word (single-word, no spaces)
         for part in re.findall(r'@([^\s<>@]+)', message.content):
             if len(teams) >= 2:
                 break
@@ -893,7 +912,11 @@ def _extract_team_names(message: discord.Message) -> list[str]:
 
 
 def _find_matching_team(message: discord.Message, stored_teams: list[str]) -> str | None:
-    """Return which stored team name is referenced in the message, or None."""
+    """Return which stored team name is referenced in the message, or None.
+
+    Priority: role mentions → user mentions → plain-text (with or without @).
+    Longer team names are checked first to prevent partial matches.
+    """
     for r in message.role_mentions:
         name = f"@{r.name}"
         if name in stored_teams:
@@ -902,9 +925,12 @@ def _find_matching_team(message: discord.Message, stored_teams: list[str]) -> st
         name = f"@{u.display_name}"
         if name in stored_teams:
             return name
+    # Plain-text fallback — longest names first so "Whiskey Whales" beats "Whales"
     content_lower = message.content.lower()
-    for team in stored_teams:
-        if team.lower() in content_lower:
+    for team in sorted(stored_teams, key=len, reverse=True):
+        if team.lower() in content_lower:          # legacy: "@Whiskey Whales" in content
+            return team
+        if team.lstrip("@").lower() in content_lower:  # new: "Whiskey Whales" in content
             return team
     return None
 
@@ -1160,7 +1186,7 @@ async def _ledger_reset(message: discord.Message):
     # Post wallet snapshot to reports before wiping match history.
     await _post_wallets_to_reports(message.guild)
     ledger_utils.reset_ledger()
-    await update_betting_embed()
+    await update_betting_embed(message.channel)
     await message.channel.send(
         "✅ Weekly ledger reset. All matches cleared. Wallet balances untouched."
     )
@@ -1196,7 +1222,10 @@ async def _match_create(message: discord.Message):
         f"✅ Match **{match['match_id']}** created: **{teams[0]}** vs **{teams[1]}**\n"
         f"🟢 Betting is now open!"
     )
-    await update_betting_embed()
+    try:
+        await update_betting_embed(message.channel)
+    except Exception as exc:
+        log.warning(f"Ledger embed update failed after match creation: {exc}")
     log.info(f"Match {match['match_id']} created: {teams[0]} vs {teams[1]}")
 
 
@@ -1208,7 +1237,11 @@ async def _match_draft(message: discord.Message):
     match_id = parts[2].upper()
 
     channel_name = getattr(message.channel, "name", "")
-    if "handshake" not in channel_name.lower():
+    in_draft_channel = (
+        MATCH_DRAFT_CHANNEL_ID and message.channel.id == MATCH_DRAFT_CHANNEL_ID
+        or not MATCH_DRAFT_CHANNEL_ID and "handshake" in channel_name.lower()
+    )
+    if not in_draft_channel:
         await message.channel.send("⚠️ `.match draft` must be run in the team handshake channel.")
         return
 
@@ -1235,7 +1268,7 @@ async def _match_draft(message: discord.Message):
         f"🟡 **{match_id}** is now **in progress** — betting locked.\n"
         f"Teams: **{t1}** vs **{t2}**{draft_note}"
     )
-    await update_betting_embed()
+    await update_betting_embed(message.channel)
     log.info(f"Match {match_id} set to in_progress in channel {message.channel.id}")
 
 
@@ -1287,7 +1320,7 @@ async def _match_resolve_winner(message: discord.Message, match_id: str, parts: 
     else:
         lines.append("No winning win-bets to pay out.")
     await message.channel.send("\n".join(lines))
-    await update_betting_embed()
+    await update_betting_embed(message.channel)
     log.info(f"Match {match_id} resolved: winner={winner}, {len(payouts)} payout(s)")
 
 
@@ -1332,7 +1365,7 @@ async def _match_resolve_prop(message: discord.Message, match_id: str, parts: li
     else:
         lines.append("No winning bets on this side.")
     await message.channel.send("\n".join(lines))
-    await update_betting_embed()
+    await update_betting_embed(message.channel)
     log.info(f"Match {match_id} prop resolved: {player} {stat}={actual_value}, {len(payouts)} payout(s)")
 
 
@@ -1418,7 +1451,7 @@ async def _place_win_bet(message: discord.Message, match: dict, match_id: str, a
     })
     await message.add_reaction("✅")
     log.info(f"Win bet: {message.author.display_name} bet {amount} on {team} in {match_id}")
-    await update_betting_embed()
+    await update_betting_embed(message.channel)
 
 
 async def _place_prop_bet(message: discord.Message, match: dict, match_id: str,
@@ -1453,17 +1486,32 @@ async def _place_prop_bet(message: discord.Message, match: dict, match_id: str,
     await message.add_reaction("✅")
     log.info(f"Prop bet: {message.author.display_name} bet {amount} {direction} "
              f"{threshold} on {player} {stat} in {match_id}")
-    await update_betting_embed()
+    await update_betting_embed(message.channel)
 
 
-async def update_betting_embed():
+async def update_betting_embed(notify_channel: discord.abc.Messageable | None = None):
     """Post or in-place edit the persistent betting embed in #betting-ledger."""
     global _ledger_page
     if not BETTING_LEDGER_CHANNEL_ID:
+        log.warning("BETTING_LEDGER_CHANNEL_ID not configured — ledger embed skipped")
+        if notify_channel:
+            await notify_channel.send(
+                "⚠️ The betting ledger channel hasn't been configured yet. Please contact an admin."
+            )
         return
+
     channel = client.get_channel(BETTING_LEDGER_CHANNEL_ID)
-    if not channel:
-        return
+    if channel is None:
+        try:
+            channel = await client.fetch_channel(BETTING_LEDGER_CHANNEL_ID)
+        except (discord.NotFound, discord.Forbidden, discord.HTTPException) as exc:
+            log.warning(f"Ledger channel {BETTING_LEDGER_CHANNEL_ID} not accessible: {exc}")
+            if notify_channel:
+                await notify_channel.send(
+                    "⚠️ The betting ledger channel could not be found. "
+                    "Please contact an admin to verify the channel configuration."
+                )
+            return
 
     data = ledger_utils.load_ledger()
     total = len(data["matches"])
@@ -1479,10 +1527,27 @@ async def update_betting_embed():
             msg = await channel.fetch_message(msg_id)
             await msg.edit(embed=embed, view=view)
             return
-        except (discord.NotFound, discord.Forbidden, discord.HTTPException):
+        except (discord.NotFound, discord.HTTPException):
             pass  # fall through to post a new message
+        except discord.Forbidden as exc:
+            log.warning(f"Cannot edit ledger embed (no permission): {exc}")
+            if notify_channel:
+                await notify_channel.send(
+                    "⚠️ The bot doesn't have permission to post in the betting ledger channel. "
+                    "Please contact an admin."
+                )
+            return
 
-    msg = await channel.send(embed=embed, view=view)
+    try:
+        msg = await channel.send(embed=embed, view=view)
+    except discord.Forbidden as exc:
+        log.warning(f"Cannot post ledger embed (no permission): {exc}")
+        if notify_channel:
+            await notify_channel.send(
+                "⚠️ The bot doesn't have permission to post in the betting ledger channel. "
+                "Please contact an admin."
+            )
+        return
     ledger_utils.update_embed_info(msg.id, BETTING_LEDGER_CHANNEL_ID)
     log.info(f"Betting ledger embed posted to channel {BETTING_LEDGER_CHANNEL_ID}")
 
