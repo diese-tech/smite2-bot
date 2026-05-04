@@ -3,6 +3,9 @@ import { initBetting, loadBetting } from "./betting.js";
 import { initDraft } from "./draft.js";
 import { initMatchOps, loadMatches } from "./match-ops.js";
 import { initRandomizer } from "./randomizer.js";
+import { escapeHtml } from "./security.js";
+
+export { escapeHtml };
 
 export const dashboardTitles = {
   overview: "Overview",
@@ -23,15 +26,6 @@ export function $(selector, root = document) {
 
 export function $all(selector, root = document) {
   return Array.from(root.querySelectorAll(selector));
-}
-
-export function escapeHtml(value) {
-  return String(value ?? "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
 }
 
 export function showToast(message = "Demo only: Discord auth is planned, not active in this static prototype.") {

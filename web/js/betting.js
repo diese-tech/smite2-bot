@@ -1,6 +1,6 @@
 import { adjustWallet, demoLedger, demoWallets, getLedger, getWallets, placeBet, resetLedger, walletsToRows } from "./api.js";
 import { loadMatches } from "./match-ops.js";
-import { $, showToast } from "./ui.js";
+import { $, escapeHtml, showToast } from "./ui.js";
 
 export function initBetting() {
   $("#wallet-adjust-form")?.addEventListener("submit", submitWalletAdjust);
@@ -53,10 +53,10 @@ function renderActiveBets(matches) {
 
     return `
       <article class="bet-row">
-        <strong>${bet.username}</strong>
-        <span>${bet.match_id}</span>
-        <span>${target}</span>
-        <span>${bet.amount} pts</span>
+        <strong>${escapeHtml(bet.username || `User ${bet.user_id}`)}</strong>
+        <span>${escapeHtml(bet.match_id)}</span>
+        <span>${escapeHtml(target)}</span>
+        <span>${Number(bet.amount || 0)} pts</span>
         <span class="pill prototype">${bet.type === "prop" ? "Prop" : "Win"}</span>
       </article>
     `;
@@ -94,8 +94,8 @@ function renderWallets(wallets) {
   container.innerHTML = wallets.map((wallet, index) => `
     <article class="wallet-row">
       <span>${index + 1}</span>
-      <strong>${wallet.username || `User ${wallet.user_id}`}</strong>
-      <em>${wallet.balance} pts</em>
+      <strong>${escapeHtml(wallet.username || `User ${wallet.user_id}`)}</strong>
+      <em>${Number(wallet.balance || 0)} pts</em>
     </article>
   `).join("");
 }

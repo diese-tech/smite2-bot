@@ -63,6 +63,12 @@ There is no compiled build step. This is plain HTML, CSS, and JavaScript.
 npm run build
 ```
 
+Security helper coverage for dashboard HTML escaping:
+
+```powershell
+npm run test:security
+```
+
 ## Edit Points
 
 - Replace the placeholder `Add to Discord` links in `index.html` with the bot's Discord OAuth invite URL.

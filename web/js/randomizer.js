@@ -10,7 +10,7 @@ import {
   rollTeam as apiRollTeam,
   runCommand,
 } from "./api.js";
-import { $, $all, showToast } from "./ui.js";
+import { $, $all, escapeHtml, showToast } from "./ui.js";
 
 let selectedRole = "jungle";
 let selectedSource = "website";
@@ -99,18 +99,21 @@ function renderRollTeam(gods) {
     const name = god.name || god;
     const role = roleLabels[god.role || selectedRole] || "Any";
     const subtitle = [god.class, god.pantheon].filter(Boolean).join(" / ") || "Pick option";
+    const imageUrl = escapeHtml(god.imageUrl || godImageUrl(name));
+    const safeName = escapeHtml(name);
+    const safeRole = escapeHtml(role);
 
     return `
       <button class="god-option-card" type="button" data-pick-index="${index}" aria-pressed="false">
         <span class="god-option-index">${index + 1}</span>
         <span class="asset-slot asset-slot--god-card" data-asset-slot="god-card 160x240 portrait">
-          <img src="${god.imageUrl || godImageUrl(name)}" alt="${name} god portrait" />
+          <img src="${imageUrl}" alt="${safeName} god portrait" />
         </span>
-        <strong>${name}</strong>
-        <small>${subtitle}</small>
+        <strong>${safeName}</strong>
+        <small>${escapeHtml(subtitle)}</small>
         <span class="god-option-role">
-          <span class="asset-slot asset-slot--role-icon" data-asset-slot="role-icon 32x32 svg">${role.slice(0, 1)}</span>
-          ${role}
+          <span class="asset-slot asset-slot--role-icon" data-asset-slot="role-icon 32x32 svg">${escapeHtml(role.slice(0, 1))}</span>
+          ${safeRole}
         </span>
         <span class="pick-affordance">Pick this one</span>
       </button>
@@ -137,7 +140,7 @@ function renderBuild(build) {
   const label = $("#build-command-label");
 
   if (slots) {
-    slots.innerHTML = build.items.map((item) => `<div>${item}</div>`).join("");
+    slots.innerHTML = build.items.map((item) => `<div>${escapeHtml(item)}</div>`).join("");
   }
 
   if (label) {

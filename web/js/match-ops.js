@@ -1,5 +1,5 @@
 import { createMatch, demoLedger, getLedger, getWinPools, resolveProp, resolveWinner, setMatchStatus } from "./api.js";
-import { $, showToast } from "./ui.js";
+import { $, escapeHtml, showToast } from "./ui.js";
 
 const statusLabels = {
   betting_open: "Betting open",
@@ -49,16 +49,20 @@ function renderMatches(matches) {
   container.innerHTML = matches.map((match) => {
     const pools = getWinPools(match);
     const poolRows = Object.entries(pools)
-      .map(([team, total]) => `<span>${team}: <strong>${total} pts</strong></span>`)
+      .map(([team, total]) => `<span>${escapeHtml(team)}: <strong>${Number(total || 0)} pts</strong></span>`)
       .join("");
+    const matchId = escapeHtml(match.match_id || "");
+    const team1 = escapeHtml(match.teams?.team1 || "Team 1");
+    const team2 = escapeHtml(match.teams?.team2 || "Team 2");
+    const status = escapeHtml(match.status || "");
 
     return `
       <article class="match-row">
         <div>
-          <strong>${match.match_id}</strong>
-          <span>${match.teams?.team1 || "Team 1"} vs ${match.teams?.team2 || "Team 2"}</span>
+          <strong>${matchId}</strong>
+          <span>${team1} vs ${team2}</span>
         </div>
-        <span class="status-badge status-badge--${match.status}">${statusLabels[match.status] || match.status}</span>
+        <span class="status-badge status-badge--${status}">${escapeHtml(statusLabels[match.status] || match.status)}</span>
         <div class="pool-totals">${poolRows}</div>
       </article>
     `;
