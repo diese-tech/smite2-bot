@@ -65,6 +65,15 @@ def tmp_wallets(tmp_path, monkeypatch):
     return wallet_file
 
 
+@pytest.fixture()
+def tmp_settings(tmp_path, monkeypatch):
+    """Redirect dashboard settings I/O to a fresh tmp file for each test."""
+    import utils.settings as settings_mod
+    settings_file = tmp_path / "guild_settings.json"
+    monkeypatch.setattr(settings_mod, "SETTINGS_PATH", settings_file)
+    return settings_file
+
+
 # ---------------------------------------------------------------------------
 # Discord mock objects
 # ---------------------------------------------------------------------------

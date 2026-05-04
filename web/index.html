@@ -645,12 +645,65 @@
               <div class="dashboard-panel" data-dashboard-panel="settings" data-admin-panel>
                 <div class="settings-grid">
                   <article class="settings-card">
-                    <h4>Asset slots</h4>
-                    <p>Prepared names: god-card, item-card, role-icon, dashboard-hero, background-texture.</p>
+                    <div class="panel-heading-row">
+                      <div>
+                        <p class="eyebrow compact">Server settings</p>
+                        <h4>Guild defaults</h4>
+                      </div>
+                      <button class="button button-secondary" id="settings-refresh" type="button">Refresh</button>
+                    </div>
+                    <form id="settings-form" class="stack-form settings-form">
+                      <div class="settings-toggle-grid">
+                        <label class="toggle-line">
+                          <input id="setting-bot-enabled" type="checkbox" checked />
+                          <span>Bot enabled</span>
+                        </label>
+                        <label class="toggle-line">
+                          <input id="setting-randomizer-enabled" type="checkbox" checked />
+                          <span>Randomizer</span>
+                        </label>
+                        <label class="toggle-line">
+                          <input id="setting-drafts-enabled" type="checkbox" checked />
+                          <span>Drafts</span>
+                        </label>
+                        <label class="toggle-line">
+                          <input id="setting-betting-enabled" type="checkbox" checked />
+                          <span>Betting</span>
+                        </label>
+                      </div>
+                      <div class="form-row">
+                        <label>
+                          Match channel
+                          <input id="setting-match-channel" placeholder="#matches" maxlength="80" />
+                        </label>
+                        <label>
+                          Betting channel
+                          <input id="setting-betting-channel" placeholder="#place-bets" maxlength="80" />
+                        </label>
+                      </div>
+                      <label>
+                        Admin channel
+                        <input id="setting-admin-channel" placeholder="#admin" maxlength="80" />
+                      </label>
+                      <div class="form-row">
+                        <label>
+                          Admin role
+                          <input id="setting-admin-role" placeholder="Admins" maxlength="80" />
+                        </label>
+                        <label>
+                          Captain role
+                          <input id="setting-captain-role" placeholder="Captains" maxlength="80" />
+                        </label>
+                      </div>
+                      <button class="button button-primary" type="submit">Save Settings</button>
+                    </form>
+                    <p class="demo-note" id="settings-meta">No saved settings yet.</p>
                   </article>
                   <article class="settings-card">
-                    <h4>Skipped for prototype</h4>
-                    <p>OAuth, guild auth, storage, bot command registration, and APIs are tracked in TODO.md.</p>
+                    <h4>Production gates</h4>
+                    <p>These settings persist to local JSON for the Railway milestone. Discord OAuth, real guild selection, RBAC, audit logs, and database-backed settings remain staged work.</p>
+                    <h4>Asset slots</h4>
+                    <p>Prepared names: god-card, item-card, role-icon, dashboard-hero, background-texture.</p>
                   </article>
                 </div>
               </div>

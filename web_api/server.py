@@ -27,7 +27,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from utils import ledger as ledger_utils, loader, parser, picker, wallet as wallet_utils  # noqa: E402
+from utils import ledger as ledger_utils, loader, parser, picker, settings as settings_utils, wallet as wallet_utils  # noqa: E402
 from utils.draft import DraftState, get_phase_label  # noqa: E402
 from utils.resolver import resolve_god_name  # noqa: E402
 
@@ -46,7 +46,7 @@ ROLE_CODES = {
 }
 
 MATCH_STATUSES = {"betting_open", "in_progress", "completed", "settled"}
-PROTECTED_GET_PATHS = {"/api/admin/status", "/api/ledger", "/api/wallets"}
+PROTECTED_GET_PATHS = {"/api/admin/status", "/api/ledger", "/api/settings", "/api/wallets"}
 PROTECTED_POST_PATHS = {
     "/api/command",
     "/api/draft/start",
@@ -60,6 +60,7 @@ PROTECTED_POST_PATHS = {
     "/api/match/resolve/prop",
     "/api/bet/place",
     "/api/admin/sync/ledger",
+    "/api/settings",
     "/api/wallet/adjust",
     "/api/ledger/reset",
 }
@@ -207,6 +208,11 @@ class Handler(BaseHTTPRequestHandler):
                 if not self._require_auth():
                     return
                 self._send_json({"ok": True, "status": _admin_status()})
+            elif parsed.path == "/api/settings":
+                if not self._require_auth():
+                    return
+                guild_id = _first(query, "guild_id") or settings_utils.DEFAULT_GUILD_ID
+                self._send_json({"ok": True, "settings": settings_utils.get_guild_settings(guild_id)})
             elif parsed.path.startswith("/api/"):
                 self._send_error(404, "Not found")
             else:
@@ -311,6 +317,10 @@ class Handler(BaseHTTPRequestHandler):
                 self._send_json({"ok": True, **result, "discord_embed_update": _schedule_ledger_embed_refresh()})
             elif parsed.path == "/api/admin/sync/ledger":
                 self._send_json({"ok": True, "discord_embed_update": _schedule_ledger_embed_refresh()})
+            elif parsed.path == "/api/settings":
+                guild_id = str(body.get("guild_id") or settings_utils.DEFAULT_GUILD_ID)
+                settings = settings_utils.update_guild_settings(guild_id, body, body.get("updated_by"))
+                self._send_json({"ok": True, "settings": settings})
             elif parsed.path == "/api/wallet/adjust":
                 wallet = _adjust_wallet(body)
                 self._send_json({"ok": True, "wallet": wallet})

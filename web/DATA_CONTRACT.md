@@ -185,3 +185,30 @@ type LedgerSyncResponse = {
   discord_embed_update: boolean;
 };
 ```
+
+## Guild Settings
+
+`GET /api/settings?guild_id=global` and `POST /api/settings` are protected. The current Railway milestone uses JSON persistence in `data/guild_settings.json`; the shape is intentionally compatible with a future database row/document keyed by Discord guild id.
+
+```ts
+type GuildSettings = {
+  guild_id: string;
+  features: {
+    botEnabled: boolean;
+    randomizerEnabled: boolean;
+    draftsEnabled: boolean;
+    bettingEnabled: boolean;
+  };
+  channels: {
+    matchChannel: string;
+    bettingChannel: string;
+    adminChannel: string;
+  };
+  roles: {
+    adminRole: string;
+    captainRole: string;
+  };
+  updated_at: number | null;
+  updated_by: string | null;
+};
+```

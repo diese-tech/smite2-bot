@@ -169,6 +169,54 @@ def test_manual_ledger_sync_is_protected_and_schedules_refresh(monkeypatch, tmp_
         _stop_server(httpd)
 
 
+def test_settings_read_write_requires_auth_and_persists(monkeypatch, tmp_ledger, tmp_wallets, tmp_settings):
+    monkeypatch.setenv("GODFORGE_ADMIN_PASSWORD", "secret-test")
+    httpd, base = _start_server()
+    try:
+        status, payload, _ = _request("GET", f"{base}/api/settings?guild_id=global")
+        assert status == 401
+
+        cookie = _login(base)
+        update = {
+            "guild_id": "global",
+            "updated_by": "test-admin",
+            "features": {"botEnabled": True, "draftsEnabled": False, "unknown": False},
+            "channels": {"matchChannel": "#matches", "bettingChannel": "#bets"},
+            "roles": {"adminRole": "Admins", "captainRole": "Captains"},
+        }
+        status, saved, _ = _request("POST", f"{base}/api/settings", update, cookie)
+        assert status == 200
+        assert saved["settings"]["features"]["draftsEnabled"] is False
+        assert saved["settings"]["channels"]["matchChannel"] == "#matches"
+        assert "unknown" not in saved["settings"]["features"]
+
+        status, loaded, _ = _request("GET", f"{base}/api/settings?guild_id=global", cookie=cookie)
+        assert status == 200
+        assert loaded["settings"]["roles"]["captainRole"] == "Captains"
+        assert loaded["settings"]["updated_by"] == "test-admin"
+    finally:
+        _stop_server(httpd)
+
+
+def test_settings_rejects_bad_guild_ids_and_control_characters(monkeypatch, tmp_ledger, tmp_wallets, tmp_settings):
+    monkeypatch.setenv("GODFORGE_ADMIN_PASSWORD", "secret-test")
+    httpd, base = _start_server()
+    try:
+        cookie = _login(base)
+        bad_payloads = [
+            {"guild_id": "../secret", "features": {"botEnabled": True}},
+            {"guild_id": "global", "channels": {"matchChannel": "#matches\nSet-Cookie: hacked=true"}},
+            {"guild_id": "global", "roles": {"adminRole": "A" * 81}},
+        ]
+
+        for payload in bad_payloads:
+            status, response, _ = _request("POST", f"{base}/api/settings", payload, cookie)
+            assert status == 400
+            assert response["ok"] is False
+    finally:
+        _stop_server(httpd)
+
+
 def test_admin_mutations_schedule_discord_ledger_refresh(monkeypatch, tmp_ledger, tmp_wallets):
     monkeypatch.setenv("GODFORGE_ADMIN_PASSWORD", "secret-test")
     calls = []

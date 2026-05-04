@@ -177,6 +177,17 @@ export async function syncLedgerEmbed() {
   return fetchJson("/api/admin/sync/ledger", { method: "POST" });
 }
 
+export async function getSettings(guild_id = "global") {
+  return fetchJson(`/api/settings?guild_id=${encodeURIComponent(guild_id)}`);
+}
+
+export async function saveSettings(payload) {
+  return fetchJson("/api/settings", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
 export async function login(password) {
   return fetchJson("/api/auth/login", {
     method: "POST",

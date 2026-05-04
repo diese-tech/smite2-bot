@@ -3,6 +3,7 @@ import { initBetting, loadBetting } from "./betting.js";
 import { initDraft } from "./draft.js";
 import { initMatchOps, loadMatches } from "./match-ops.js";
 import { initRandomizer } from "./randomizer.js";
+import { initSettings, loadSettings } from "./settings.js";
 import { escapeHtml } from "./security.js";
 
 export { escapeHtml };
@@ -160,6 +161,9 @@ function activateDashboardTab(tabName) {
   if (isAuthenticated && tabName === "overview") {
     loadAdminStatus();
   }
+  if (isAuthenticated && tabName === "settings") {
+    loadSettings();
+  }
 }
 
 function activateToolTab(tabName) {
@@ -281,7 +285,7 @@ function bindAuth() {
       $("#admin-password").value = "";
       setAuthState(true, true);
       showToast("Admin dashboard unlocked.");
-      await Promise.all([loadMatches(), loadBetting(), loadAdminStatus()]);
+      await Promise.all([loadMatches(), loadBetting(), loadAdminStatus(), loadSettings()]);
     } catch (error) {
       showToast(error.message || "Admin login failed.");
     }
@@ -320,6 +324,7 @@ function init() {
   initDraft();
   initMatchOps();
   initBetting();
+  initSettings();
   checkApiHealth();
   refreshAuthStatus();
   updateCommandPreview();

@@ -916,6 +916,16 @@ h1 {
   line-height: 1.65;
 }
 
+.settings-form {
+  margin-top: 16px;
+}
+
+.settings-toggle-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
 .highlight-card {
   background:
     radial-gradient(circle at 18% 12%, rgba(240, 189, 77, 0.17), transparent 48%),

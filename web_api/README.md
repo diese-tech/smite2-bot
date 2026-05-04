@@ -70,6 +70,8 @@ POST /api/admin/sync/ledger
 
 `POST /api/admin/sync/ledger` asks the running bot loop to refresh the Discord betting embed when the API and bot are running in the combined Railway process.
 
+`GET /api/settings` and `POST /api/settings` provide temporary JSON-backed guild settings for the admin dashboard. They are scoped by `guild_id`, default to `global`, and are intended to be replaced by Discord OAuth, guild permissions, and database-backed settings later.
+
 ## Endpoints
 
 ```text
@@ -80,6 +82,7 @@ GET  /api/gods/roll?role=jungle&source=website
 GET  /api/gods/roll5?role=jungle&source=website
 GET  /api/builds/roll?role=adc&type=standard&count=6
 GET  /api/ledger
+GET  /api/settings?guild_id=global
 GET  /api/wallets
 POST /api/auth/login
 POST /api/auth/logout
@@ -95,6 +98,7 @@ POST /api/match/status
 POST /api/match/resolve/winner
 POST /api/match/resolve/prop
 POST /api/bet/place
+POST /api/settings
 POST /api/wallet/adjust
 POST /api/ledger/reset
 ```
@@ -122,6 +126,27 @@ POST /api/bet/place
 
 POST /api/wallet/adjust
 { "target": "AtlasMain", "action": "give", "amount": 100 }
+
+POST /api/settings
+{
+  "guild_id": "global",
+  "updated_by": "web-dashboard",
+  "features": {
+    "botEnabled": true,
+    "randomizerEnabled": true,
+    "draftsEnabled": true,
+    "bettingEnabled": true
+  },
+  "channels": {
+    "matchChannel": "#matches",
+    "bettingChannel": "#place-bets",
+    "adminChannel": "#admin"
+  },
+  "roles": {
+    "adminRole": "Admins",
+    "captainRole": "Captains"
+  }
+}
 ```
 
 `/api/wallet/adjust` accepts `give`, `take`, or `set`. Wallets are stored in the existing `data/wallets.json` shape keyed by user id. For local dashboard testing without Discord ids, the API derives a stable local id from `target`.
