@@ -12,6 +12,7 @@ This file tracks work intentionally skipped in the static prototype.
 - Added a development-only `web_api` bridge around existing parser, loader, picker, resolver, draft, ledger, and wallet modules.
 - Added protected admin operations telemetry and a manual Discord ledger embed sync control for the combined Railway process.
 - Added temporary JSON-backed guild settings for feature toggles, channel labels, and admin/captain role labels.
+- Added a temporary JSON-backed admin audit feed for dashboard actions.
 - Kept Discord auth, storage, deployment, secrets, bot runtime files, and production assets untouched.
 
 ## Bot Command Surface Parity
@@ -37,6 +38,7 @@ This file tracks work intentionally skipped in the static prototype.
 - Continue the MEE6-style dashboard pass: server selector states, module cards, audit activity, permission placeholders, and guild-scoped settings scaffolding.
 - Run the local Python API and verify every web endpoint against real bot data after each admin surface expansion.
 - Replace `data/guild_settings.json` with a real database before multi-guild production use.
+- Replace `data/admin_audit.json` with durable database audit rows before serious multi-admin use.
 - Start an asset manifest for owned graphics, especially god cards, item cards, role icons, and in-game map surfaces for rolls, drafts, and builds.
 
 ## Discord OAuth and Guild Authorization

@@ -1,4 +1,4 @@
-import { getAdminStatus, getAuthStatus, getHealth, login, logout, setApiOnline, syncLedgerEmbed } from "./api.js";
+import { getAdminAudit, getAdminStatus, getAuthStatus, getHealth, login, logout, setApiOnline, syncLedgerEmbed } from "./api.js";
 import { initBetting, loadBetting } from "./betting.js";
 import { initDraft } from "./draft.js";
 import { initMatchOps, loadMatches } from "./match-ops.js";
@@ -121,6 +121,35 @@ async function loadAdminStatus() {
   }
 }
 
+async function loadAdminAudit() {
+  const list = $("#admin-audit-list");
+
+  if (!list) {
+    return;
+  }
+
+  try {
+    const payload = await getAdminAudit(8);
+    const events = payload.events || [];
+    list.innerHTML = events.length
+      ? events.map((event) => {
+        const when = event.ts ? new Date(event.ts * 1000).toLocaleString() : "Unknown time";
+        return `
+          <article class="audit-row">
+            <div>
+              <strong>${escapeHtml(event.action)}</strong>
+              <span>${escapeHtml(event.target || "dashboard")}</span>
+            </div>
+            <small>${escapeHtml(when)}</small>
+          </article>
+        `;
+      }).join("")
+      : `<p class="empty-state">No admin activity logged yet.</p>`;
+  } catch (error) {
+    list.innerHTML = `<p class="empty-state">${error.status === 401 ? "Admin login required." : "Activity unavailable."}</p>`;
+  }
+}
+
 async function checkApiHealth() {
   try {
     await getHealth();
@@ -160,6 +189,7 @@ function activateDashboardTab(tabName) {
   }
   if (isAuthenticated && tabName === "overview") {
     loadAdminStatus();
+    loadAdminAudit();
   }
   if (isAuthenticated && tabName === "settings") {
     loadSettings();
@@ -285,7 +315,7 @@ function bindAuth() {
       $("#admin-password").value = "";
       setAuthState(true, true);
       showToast("Admin dashboard unlocked.");
-      await Promise.all([loadMatches(), loadBetting(), loadAdminStatus(), loadSettings()]);
+      await Promise.all([loadMatches(), loadBetting(), loadAdminStatus(), loadAdminAudit(), loadSettings()]);
     } catch (error) {
       showToast(error.message || "Admin login failed.");
     }
@@ -307,7 +337,7 @@ function bindAdminControls() {
     try {
       const payload = await syncLedgerEmbed();
       showToast(payload.discord_embed_update ? "Discord ledger refresh queued." : "Discord bot loop is not available.");
-      await loadAdminStatus();
+      await Promise.all([loadAdminStatus(), loadAdminAudit()]);
     } catch (error) {
       showToast(error.message || "Discord sync failed.");
     }

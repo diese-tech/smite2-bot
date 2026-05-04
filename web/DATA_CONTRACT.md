@@ -212,3 +212,18 @@ type GuildSettings = {
   updated_by: string | null;
 };
 ```
+
+## Admin Audit Event
+
+`GET /api/admin/audit?limit=25` is protected and returns newest events first.
+
+```ts
+type AdminAuditEvent = {
+  ts: number;
+  actor: string;
+  action: string;
+  target: string;
+  status: string;
+  metadata: Record<string, string | number | boolean | null>;
+};
+```

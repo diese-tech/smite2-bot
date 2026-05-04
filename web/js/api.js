@@ -177,6 +177,10 @@ export async function syncLedgerEmbed() {
   return fetchJson("/api/admin/sync/ledger", { method: "POST" });
 }
 
+export async function getAdminAudit(limit = 25) {
+  return fetchJson(`/api/admin/audit?limit=${encodeURIComponent(limit)}`);
+}
+
 export async function getSettings(guild_id = "global") {
   return fetchJson(`/api/settings?guild_id=${encodeURIComponent(guild_id)}`);
 }

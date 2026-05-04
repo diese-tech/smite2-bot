@@ -70,6 +70,8 @@ POST /api/admin/sync/ledger
 
 `POST /api/admin/sync/ledger` asks the running bot loop to refresh the Discord betting embed when the API and bot are running in the combined Railway process.
 
+`GET /api/admin/audit` returns the most recent protected dashboard/admin actions from `data/admin_audit.json`.
+
 `GET /api/settings` and `POST /api/settings` provide temporary JSON-backed guild settings for the admin dashboard. They are scoped by `guild_id`, default to `global`, and are intended to be replaced by Discord OAuth, guild permissions, and database-backed settings later.
 
 ## Endpoints
@@ -77,6 +79,7 @@ POST /api/admin/sync/ledger
 ```text
 GET  /api/health
 GET  /api/auth/status
+GET  /api/admin/audit?limit=25
 GET  /api/admin/status
 GET  /api/gods/roll?role=jungle&source=website
 GET  /api/gods/roll5?role=jungle&source=website

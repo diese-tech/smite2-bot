@@ -43,7 +43,7 @@ With the API running, the dashboard random god, Roll Team (`.roll5`), build gene
 
 Admin-only dashboard actions require `GODFORGE_ADMIN_PASSWORD` when using `web_api/server.py` or the combined Railway launcher. Public randomizer and build endpoints remain available without login.
 
-After login, the Overview panel includes a MEE6-style operations monitor with bot status, guild count, ledger state, wallet count, active draft rooms, and a manual Discord ledger embed sync action. The sync control only queues a real Discord refresh when the API and bot are running together through `railway_app.py`.
+After login, the Overview panel includes a MEE6-style operations monitor with bot status, guild count, ledger state, wallet count, active draft rooms, recent admin activity, and a manual Discord ledger embed sync action. The sync control only queues a real Discord refresh when the API and bot are running together through `railway_app.py`.
 
 The Settings module now saves temporary guild defaults to `data/guild_settings.json`: feature toggles, channel names, and admin/captain role labels. This is the staging surface for the future Discord OAuth server picker and database-backed guild settings.
 

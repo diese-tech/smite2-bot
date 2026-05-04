@@ -27,7 +27,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from utils import ledger as ledger_utils, loader, parser, picker, settings as settings_utils, wallet as wallet_utils  # noqa: E402
+from utils import audit as audit_utils, ledger as ledger_utils, loader, parser, picker, settings as settings_utils, wallet as wallet_utils  # noqa: E402
 from utils.draft import DraftState, get_phase_label  # noqa: E402
 from utils.resolver import resolve_god_name  # noqa: E402
 
@@ -46,7 +46,7 @@ ROLE_CODES = {
 }
 
 MATCH_STATUSES = {"betting_open", "in_progress", "completed", "settled"}
-PROTECTED_GET_PATHS = {"/api/admin/status", "/api/ledger", "/api/settings", "/api/wallets"}
+PROTECTED_GET_PATHS = {"/api/admin/audit", "/api/admin/status", "/api/ledger", "/api/settings", "/api/wallets"}
 PROTECTED_POST_PATHS = {
     "/api/command",
     "/api/draft/start",
@@ -208,6 +208,11 @@ class Handler(BaseHTTPRequestHandler):
                 if not self._require_auth():
                     return
                 self._send_json({"ok": True, "status": _admin_status()})
+            elif parsed.path == "/api/admin/audit":
+                if not self._require_auth():
+                    return
+                limit = _first(query, "limit") or "25"
+                self._send_json({"ok": True, "events": audit_utils.load_events(limit)})
             elif parsed.path == "/api/settings":
                 if not self._require_auth():
                     return
@@ -281,6 +286,7 @@ class Handler(BaseHTTPRequestHandler):
                 team1 = _required_str(body, "team1")
                 team2 = _required_str(body, "team2")
                 match = ledger_utils.create_match(team1, team2)
+                _record_audit("match.create", match["match_id"], metadata={"team1": team1, "team2": team2})
                 self._send_json({"ok": True, "match": match, "discord_embed_update": _schedule_ledger_embed_refresh()})
             elif parsed.path == "/api/match/status":
                 match_id = _match_id(body)
@@ -291,6 +297,7 @@ class Handler(BaseHTTPRequestHandler):
                     self._send_error(404, f"Match not found: {match_id}")
                     return
                 ledger_utils.set_match_status(match_id, status)
+                _record_audit("match.status", match_id, metadata={"status": status})
                 self._send_json({"ok": True, "match": ledger_utils.get_match(match_id), "discord_embed_update": _schedule_ledger_embed_refresh()})
             elif parsed.path == "/api/match/resolve/winner":
                 match_id = _match_id(body)
@@ -300,6 +307,7 @@ class Handler(BaseHTTPRequestHandler):
                     return
                 payouts = ledger_utils.resolve_win_bets(match_id, winner)
                 wallet_utils.apply_payouts(payouts)
+                _record_audit("match.resolve_winner", match_id, metadata={"winner": winner, "payouts": len(payouts)})
                 self._send_json({"ok": True, "match": ledger_utils.get_match(match_id), "payouts": payouts, "discord_embed_update": _schedule_ledger_embed_refresh()})
             elif parsed.path == "/api/match/resolve/prop":
                 match_id = _match_id(body)
@@ -311,23 +319,29 @@ class Handler(BaseHTTPRequestHandler):
                     return
                 payouts, had_bets = ledger_utils.resolve_prop_bets(match_id, player, stat, actual_value)
                 wallet_utils.apply_payouts(payouts)
+                _record_audit("match.resolve_prop", match_id, metadata={"player": player, "stat": stat, "payouts": len(payouts)})
                 self._send_json({"ok": True, "match": ledger_utils.get_match(match_id), "payouts": payouts, "had_bets": had_bets, "discord_embed_update": _schedule_ledger_embed_refresh()})
             elif parsed.path == "/api/bet/place":
                 result = _place_bet(body)
+                _record_audit("bet.place", result["match"]["match_id"], metadata={"username": result["bet"]["username"], "amount": result["bet"]["amount"], "type": result["bet"]["type"]})
                 self._send_json({"ok": True, **result, "discord_embed_update": _schedule_ledger_embed_refresh()})
             elif parsed.path == "/api/admin/sync/ledger":
+                _record_audit("discord.sync_ledger", "betting_embed")
                 self._send_json({"ok": True, "discord_embed_update": _schedule_ledger_embed_refresh()})
             elif parsed.path == "/api/settings":
                 guild_id = str(body.get("guild_id") or settings_utils.DEFAULT_GUILD_ID)
                 settings = settings_utils.update_guild_settings(guild_id, body, body.get("updated_by"))
+                _record_audit("settings.update", settings["guild_id"], metadata={"updated_by": settings.get("updated_by")})
                 self._send_json({"ok": True, "settings": settings})
             elif parsed.path == "/api/wallet/adjust":
                 wallet = _adjust_wallet(body)
+                _record_audit("wallet.adjust", wallet["username"], metadata={"action": body.get("action"), "amount": body.get("amount"), "balance": wallet["balance"]})
                 self._send_json({"ok": True, "wallet": wallet})
             elif parsed.path == "/api/ledger/reset":
                 ledger = ledger_utils.load_ledger()
                 cleared = len(ledger.get("matches", []))
                 ledger_utils.reset_ledger()
+                _record_audit("ledger.reset", "weekly_ledger", metadata={"cleared": cleared})
                 self._send_json({"ok": True, "cleared": cleared, "discord_embed_update": _schedule_ledger_embed_refresh()})
             else:
                 self._send_error(404, "Not found")
@@ -618,6 +632,13 @@ def _admin_status() -> dict:
         "draftRooms": len(draft_rooms),
         "checkedAt": int(time.time()),
     }
+
+
+def _record_audit(action: str, target: str = "", metadata: dict | None = None):
+    try:
+        audit_utils.record_event(action=action, target=target, metadata=metadata or {})
+    except Exception as exc:
+        print(f"Admin audit write failed: {exc}")
 
 
 def _bot_status() -> dict:

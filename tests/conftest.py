@@ -74,6 +74,15 @@ def tmp_settings(tmp_path, monkeypatch):
     return settings_file
 
 
+@pytest.fixture(autouse=True)
+def tmp_audit(tmp_path, monkeypatch):
+    """Redirect admin audit I/O to a fresh tmp file for each test."""
+    import utils.audit as audit_mod
+    audit_file = tmp_path / "admin_audit.json"
+    monkeypatch.setattr(audit_mod, "AUDIT_PATH", audit_file)
+    return audit_file
+
+
 # ---------------------------------------------------------------------------
 # Discord mock objects
 # ---------------------------------------------------------------------------

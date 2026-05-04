@@ -12,6 +12,7 @@ import urllib.request
 
 from utils import ledger as ledger_utils
 from utils import wallet as wallet_utils
+from utils import audit as audit_utils
 from web_api import server as web_server
 
 
@@ -215,6 +216,43 @@ def test_settings_rejects_bad_guild_ids_and_control_characters(monkeypatch, tmp_
             assert response["ok"] is False
     finally:
         _stop_server(httpd)
+
+
+def test_admin_audit_requires_auth_and_records_mutations(monkeypatch, tmp_ledger, tmp_wallets, tmp_settings):
+    monkeypatch.setenv("GODFORGE_ADMIN_PASSWORD", "secret-test")
+    httpd, base = _start_server()
+    try:
+        status, payload, _ = _request("GET", f"{base}/api/admin/audit")
+        assert status == 401
+
+        cookie = _login(base)
+        status, created, _ = _request(
+            "POST",
+            f"{base}/api/match/create",
+            {"team1": "Solaris", "team2": "Onyx"},
+            cookie,
+        )
+        assert status == 200
+
+        status, audit, _ = _request("GET", f"{base}/api/admin/audit?limit=5", cookie=cookie)
+        assert status == 200
+        assert audit["events"][0]["action"] == "match.create"
+        assert audit["events"][0]["target"] == created["match"]["match_id"]
+    finally:
+        _stop_server(httpd)
+
+
+def test_audit_log_sanitizes_and_trims_malicious_metadata(tmp_audit):
+    event = audit_utils.record_event(
+        "settings.update\nSet-Cookie: hacked=true",
+        "<script>alert(1)</script>",
+        metadata={"x" * 60: "A" * 140, "nested": {"ignored": True}},
+    )
+
+    assert "\n" not in event["action"]
+    assert event["target"] == "<script>alert(1)</script>"
+    assert list(event["metadata"].keys()) == ["x" * 40]
+    assert event["metadata"]["x" * 40] == "A" * 120
 
 
 def test_admin_mutations_schedule_discord_ledger_refresh(monkeypatch, tmp_ledger, tmp_wallets):

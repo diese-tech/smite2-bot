@@ -878,6 +878,37 @@ h1 {
   font-weight: 800;
 }
 
+.audit-feed {
+  margin-top: 16px;
+}
+
+#admin-audit-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.audit-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.audit-row strong,
+.audit-row span {
+  display: block;
+}
+
+.audit-row span,
+.audit-row small {
+  color: var(--muted);
+}
+
 .portal-grid,
 .match-grid,
 .settings-grid {
