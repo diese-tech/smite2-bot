@@ -43,6 +43,8 @@ With the API running, the dashboard random god, Roll Team (`.roll5`), build gene
 
 Admin-only dashboard actions require `GODFORGE_ADMIN_PASSWORD` when using `web_api/server.py` or the combined Railway launcher. Public randomizer and build endpoints remain available without login.
 
+After login, the Overview panel includes a MEE6-style operations monitor with bot status, guild count, ledger state, wallet count, active draft rooms, and a manual Discord ledger embed sync action. The sync control only queues a real Discord refresh when the API and bot are running together through `railway_app.py`.
+
 ## Combined Railway Launcher
 
 The fast live deployment path uses the repo-root launcher:
@@ -67,4 +69,5 @@ npm run build
 - Replace placeholder dashboard copy as the product direction becomes clearer.
 - The randomizer currently uses SmiteFire CDN god portraits for visual context.
 - Dashboard data shapes are documented in `DATA_CONTRACT.md`.
+- The temporary admin login is password-cookie based and should be replaced by Discord OAuth plus guild permission checks.
 - Production graphics can be mapped into the named asset slots: `god-card`, `item-card`, `role-icon`, `dashboard-hero`, `background-texture`, and future in-game map surfaces.

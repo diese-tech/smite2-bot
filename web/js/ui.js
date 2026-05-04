@@ -1,4 +1,4 @@
-import { getAuthStatus, getHealth, login, logout, setApiOnline } from "./api.js";
+import { getAdminStatus, getAuthStatus, getHealth, login, logout, setApiOnline, syncLedgerEmbed } from "./api.js";
 import { initBetting, loadBetting } from "./betting.js";
 import { initDraft } from "./draft.js";
 import { initMatchOps, loadMatches } from "./match-ops.js";
@@ -23,6 +23,15 @@ export function $(selector, root = document) {
 
 export function $all(selector, root = document) {
   return Array.from(root.querySelectorAll(selector));
+}
+
+export function escapeHtml(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }
 
 export function showToast(message = "Demo only: Discord auth is planned, not active in this static prototype.") {
@@ -51,6 +60,70 @@ function setApiStatus(online) {
   status.textContent = online ? "Local API online" : "API fallback mode";
   status.classList.toggle("live", online);
   status.classList.toggle("prototype", !online);
+}
+
+async function loadAdminStatus() {
+  const summary = $("#admin-status-summary");
+  const guildList = $("#admin-guild-list");
+  const syncState = $("#admin-sync-state");
+
+  if (!summary && !guildList && !syncState) {
+    return;
+  }
+
+  try {
+    const payload = await getAdminStatus();
+    const status = payload.status || {};
+    const bot = status.bot || {};
+    const data = status.data || {};
+    const statusCounts = data.statusCounts || {};
+
+    if (summary) {
+      summary.innerHTML = `
+        <article class="ops-stat">
+          <span>Bot</span>
+          <strong>${bot.connected ? "Online" : "Offline"}</strong>
+          <small>${escapeHtml(bot.user || "No Discord client detected")}</small>
+        </article>
+        <article class="ops-stat">
+          <span>Guilds</span>
+          <strong>${bot.guildCount ?? 0}</strong>
+          <small>${bot.latencyMs === null || bot.latencyMs === undefined ? "Latency unavailable" : `${bot.latencyMs}ms latency`}</small>
+        </article>
+        <article class="ops-stat">
+          <span>Ledger</span>
+          <strong>${data.matchCount ?? 0}</strong>
+          <small>${data.embedConfigured ? "Discord embed linked" : "Embed pointer missing"}</small>
+        </article>
+        <article class="ops-stat">
+          <span>Wallets</span>
+          <strong>${data.walletCount ?? 0}</strong>
+          <small>${status.draftRooms ?? 0} active web draft rooms</small>
+        </article>
+      `;
+    }
+
+    if (guildList) {
+      const guilds = bot.guilds || [];
+      guildList.innerHTML = guilds.length
+        ? guilds.map((guild) => `<span>${escapeHtml(guild.name)}</span>`).join("")
+        : `<span>No guilds reported yet.</span>`;
+    }
+
+    if (syncState) {
+      syncState.textContent = `Open ${statusCounts.betting_open || 0} / live ${statusCounts.in_progress || 0} / completed ${statusCounts.completed || 0} / settled ${statusCounts.settled || 0}`;
+    }
+  } catch (error) {
+    if (summary) {
+      summary.innerHTML = `<p class="empty-state">${error.status === 401 ? "Admin login required." : "Status unavailable."}</p>`;
+    }
+    if (guildList) {
+      guildList.innerHTML = `<span>Login required</span>`;
+    }
+    if (syncState) {
+      syncState.textContent = "Locked";
+    }
+  }
 }
 
 async function checkApiHealth() {
@@ -89,6 +162,9 @@ function activateDashboardTab(tabName) {
   }
   if (isAuthenticated && tabName === "betting") {
     loadBetting();
+  }
+  if (isAuthenticated && tabName === "overview") {
+    loadAdminStatus();
   }
 }
 
@@ -211,7 +287,7 @@ function bindAuth() {
       $("#admin-password").value = "";
       setAuthState(true, true);
       showToast("Admin dashboard unlocked.");
-      await Promise.all([loadMatches(), loadBetting()]);
+      await Promise.all([loadMatches(), loadBetting(), loadAdminStatus()]);
     } catch (error) {
       showToast(error.message || "Admin login failed.");
     }
@@ -227,11 +303,25 @@ function bindAuth() {
   });
 }
 
+function bindAdminControls() {
+  $("#admin-status-refresh")?.addEventListener("click", loadAdminStatus);
+  $("#admin-sync-ledger")?.addEventListener("click", async () => {
+    try {
+      const payload = await syncLedgerEmbed();
+      showToast(payload.discord_embed_update ? "Discord ledger refresh queued." : "Discord bot loop is not available.");
+      await loadAdminStatus();
+    } catch (error) {
+      showToast(error.message || "Discord sync failed.");
+    }
+  });
+}
+
 function init() {
   bindNavigation();
   bindCommandPreview();
   bindDemoActions();
   bindAuth();
+  bindAdminControls();
   initRandomizer();
   initDraft();
   initMatchOps();

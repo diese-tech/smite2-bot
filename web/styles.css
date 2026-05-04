@@ -794,6 +794,90 @@ h1 {
   font-size: 30px;
 }
 
+.admin-ops-console {
+  margin-bottom: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  padding: 18px;
+  background:
+    linear-gradient(135deg, rgba(88, 101, 242, 0.14), transparent 46%),
+    rgba(5, 8, 14, 0.72);
+}
+
+.admin-ops-console h4 {
+  margin-bottom: 0;
+  font-size: 21px;
+}
+
+.console-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.ops-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.ops-stat {
+  min-width: 0;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 14px;
+  background: rgba(255, 255, 255, 0.055);
+}
+
+.ops-stat span,
+.ops-stat small {
+  display: block;
+  color: var(--muted);
+}
+
+.ops-stat strong {
+  display: block;
+  margin: 6px 0;
+  font-size: 24px;
+}
+
+.guild-strip {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 12px;
+}
+
+.guild-strip-label {
+  flex: 0 0 auto;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+#admin-guild-list {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+#admin-guild-list span {
+  border: 1px solid rgba(240, 189, 77, 0.2);
+  border-radius: 7px;
+  padding: 7px 9px;
+  background: rgba(240, 189, 77, 0.08);
+  color: var(--soft);
+  font-size: 13px;
+  font-weight: 800;
+}
+
 .portal-grid,
 .match-grid,
 .settings-grid {
@@ -1832,6 +1916,7 @@ textarea:focus {
   }
 
   .metric-row,
+  .ops-stat-grid,
   .portal-grid,
   .card-grid,
     .draft-console,
@@ -1901,6 +1986,7 @@ textarea:focus {
   }
 
   .metric-row,
+  .ops-stat-grid,
   .portal-grid,
   .card-grid,
   .draft-console,

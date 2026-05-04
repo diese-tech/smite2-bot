@@ -141,3 +141,47 @@ type DraftState = {
   unavailableGods: string[];
 };
 ```
+
+## Admin Status
+
+`GET /api/admin/status` is protected and is used by the Overview operations monitor.
+
+```ts
+type AdminStatusResponse = {
+  ok: true;
+  status: AdminStatus;
+};
+
+type AdminStatus = {
+  bot: {
+    connected: boolean;
+    user: string | null;
+    guildCount: number;
+    guilds: Array<{
+      id: string;
+      name: string;
+    }>;
+    latencyMs: number | null;
+    error?: string;
+  };
+  data: {
+    ledgerPath: string;
+    walletsPath: string;
+    matchCount: number;
+    walletCount: number;
+    statusCounts: Record<MatchStatus | string, number>;
+    embedConfigured: boolean;
+  };
+  draftRooms: number;
+  checkedAt: number;
+};
+```
+
+`POST /api/admin/sync/ledger` is protected and returns whether a Discord embed refresh could be queued on the running bot loop:
+
+```ts
+type LedgerSyncResponse = {
+  ok: true;
+  discord_embed_update: boolean;
+};
+```

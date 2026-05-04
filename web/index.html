@@ -178,6 +178,28 @@
                     <small>Slots prepared for Drive or zip assets</small>
                   </article>
                 </div>
+                <div class="admin-ops-console" data-admin-panel>
+                  <div class="panel-heading-row">
+                    <div>
+                      <p class="eyebrow compact">Live operations</p>
+                      <h4>Bot and server monitor</h4>
+                    </div>
+                    <div class="console-actions">
+                      <span class="pill prototype" id="admin-sync-state">Locked</span>
+                      <button class="button button-secondary" id="admin-status-refresh" type="button">Refresh Status</button>
+                      <button class="button button-primary" id="admin-sync-ledger" type="button">Sync Discord Embed</button>
+                    </div>
+                  </div>
+                  <div class="ops-stat-grid" id="admin-status-summary" aria-live="polite">
+                    <p class="empty-state">Admin login required.</p>
+                  </div>
+                  <div class="guild-strip">
+                    <span class="guild-strip-label">Managed servers</span>
+                    <div id="admin-guild-list">
+                      <span>Login required</span>
+                    </div>
+                  </div>
+                </div>
                 <div class="portal-grid">
                   <article class="portal-card highlight-card">
                     <span class="pill live">Bot live today</span>

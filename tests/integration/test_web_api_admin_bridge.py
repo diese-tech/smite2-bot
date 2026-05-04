@@ -109,6 +109,66 @@ def test_wrong_password_does_not_unlock_admin_endpoints(monkeypatch, tmp_ledger,
         _stop_server(httpd)
 
 
+def test_tampered_admin_cookie_is_rejected(monkeypatch, tmp_ledger, tmp_wallets):
+    monkeypatch.setenv("GODFORGE_ADMIN_PASSWORD", "secret-test")
+    httpd, base = _start_server()
+    try:
+        cookie = f"{web_server.SESSION_COOKIE}=not-a-real-session"
+
+        status, payload, _ = _request("GET", f"{base}/api/admin/status", cookie=cookie)
+
+        assert status == 401
+        assert "login" in payload["error"].lower()
+    finally:
+        _stop_server(httpd)
+
+
+def test_static_file_lookup_rejects_path_traversal():
+    assert web_server._static_path("/index.html").name == "index.html"
+    assert web_server._static_path("/../bot.py") is None
+    assert web_server._static_path("/..%2Fbot.py") is None
+
+
+def test_admin_status_reports_data_counts_and_requires_auth(monkeypatch, tmp_ledger, tmp_wallets):
+    monkeypatch.setenv("GODFORGE_ADMIN_PASSWORD", "secret-test")
+    ledger_utils.create_match("Solaris", "Onyx")
+    wallet_utils.ensure_wallet(111, "AtlasMain")
+    httpd, base = _start_server()
+    try:
+        status, payload, _ = _request("GET", f"{base}/api/admin/status")
+        assert status == 401
+
+        cookie = _login(base)
+        status, payload, _ = _request("GET", f"{base}/api/admin/status", cookie=cookie)
+
+        assert status == 200
+        assert payload["status"]["data"]["matchCount"] == 1
+        assert payload["status"]["data"]["walletCount"] == 1
+        assert payload["status"]["data"]["statusCounts"]["betting_open"] == 1
+        assert payload["status"]["bot"]["guildCount"] >= 0
+    finally:
+        _stop_server(httpd)
+
+
+def test_manual_ledger_sync_is_protected_and_schedules_refresh(monkeypatch, tmp_ledger, tmp_wallets):
+    monkeypatch.setenv("GODFORGE_ADMIN_PASSWORD", "secret-test")
+    calls = []
+    monkeypatch.setattr(web_server, "_schedule_ledger_embed_refresh", lambda: calls.append("refresh") or True)
+    httpd, base = _start_server()
+    try:
+        status, payload, _ = _request("POST", f"{base}/api/admin/sync/ledger", {})
+        assert status == 401
+
+        cookie = _login(base)
+        status, payload, _ = _request("POST", f"{base}/api/admin/sync/ledger", {}, cookie)
+
+        assert status == 200
+        assert payload["discord_embed_update"] is True
+        assert calls == ["refresh"]
+    finally:
+        _stop_server(httpd)
+
+
 def test_admin_mutations_schedule_discord_ledger_refresh(monkeypatch, tmp_ledger, tmp_wallets):
     monkeypatch.setenv("GODFORGE_ADMIN_PASSWORD", "secret-test")
     calls = []

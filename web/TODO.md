@@ -10,6 +10,7 @@ This file tracks work intentionally skipped in the static prototype.
 - Added a build generator UI that can call a local build API when available.
 - Added Match Ops and Betting dashboard modules with local API fallback data.
 - Added a development-only `web_api` bridge around existing parser, loader, picker, resolver, draft, ledger, and wallet modules.
+- Added protected admin operations telemetry and a manual Discord ledger embed sync control for the combined Railway process.
 - Kept Discord auth, storage, deployment, secrets, bot runtime files, and production assets untouched.
 
 ## Bot Command Surface Parity
@@ -31,8 +32,9 @@ This file tracks work intentionally skipped in the static prototype.
 
 ## Morning Priority
 
-- Run the local Python API in a normal Python environment and verify every web endpoint against real bot data.
-- Decide the production architecture for the shared API before deploying anything.
+- Watch GitHub/Railway after each pushed batch and verify the live dashboard still serves public tools plus protected admin modules.
+- Continue the MEE6-style dashboard pass: server selector states, module cards, audit activity, permission placeholders, and guild-scoped settings scaffolding.
+- Run the local Python API and verify every web endpoint against real bot data after each admin surface expansion.
 - Start an asset manifest for owned graphics, especially god cards, item cards, role icons, and in-game map surfaces for rolls, drafts, and builds.
 
 ## Discord OAuth and Guild Authorization

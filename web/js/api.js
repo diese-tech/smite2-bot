@@ -169,6 +169,14 @@ export async function getAuthStatus() {
   return fetchJson("/api/auth/status");
 }
 
+export async function getAdminStatus() {
+  return fetchJson("/api/admin/status");
+}
+
+export async function syncLedgerEmbed() {
+  return fetchJson("/api/admin/sync/ledger", { method: "POST" });
+}
+
 export async function login(password) {
   return fetchJson("/api/auth/login", {
     method: "POST",

@@ -59,11 +59,23 @@ POST /api/auth/login
 POST /api/auth/logout
 ```
 
+Protected admin telemetry and sync endpoints are also available after login:
+
+```text
+GET /api/admin/status
+POST /api/admin/sync/ledger
+```
+
+`GET /api/admin/status` reports bot connection state, Discord user, guild count, recent guild names, ledger counts, wallet count, embed pointer state, active web draft rooms, and a check timestamp.
+
+`POST /api/admin/sync/ledger` asks the running bot loop to refresh the Discord betting embed when the API and bot are running in the combined Railway process.
+
 ## Endpoints
 
 ```text
 GET  /api/health
 GET  /api/auth/status
+GET  /api/admin/status
 GET  /api/gods/roll?role=jungle&source=website
 GET  /api/gods/roll5?role=jungle&source=website
 GET  /api/builds/roll?role=adc&type=standard&count=6
@@ -71,6 +83,7 @@ GET  /api/ledger
 GET  /api/wallets
 POST /api/auth/login
 POST /api/auth/logout
+POST /api/admin/sync/ledger
 POST /api/command
 POST /api/draft/start
 POST /api/draft/action
@@ -118,7 +131,7 @@ POST /api/wallet/adjust
 `POST /api/ledger/reset` clears matches and returns:
 
 ```json
-{ "ok": true, "cleared": 2 }
+{ "ok": true, "cleared": 2, "discord_embed_update": true }
 ```
 
 ## Notes

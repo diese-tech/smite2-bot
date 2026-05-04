@@ -46,7 +46,7 @@ ROLE_CODES = {
 }
 
 MATCH_STATUSES = {"betting_open", "in_progress", "completed", "settled"}
-PROTECTED_GET_PATHS = {"/api/ledger", "/api/wallets"}
+PROTECTED_GET_PATHS = {"/api/admin/status", "/api/ledger", "/api/wallets"}
 PROTECTED_POST_PATHS = {
     "/api/command",
     "/api/draft/start",
@@ -59,6 +59,7 @@ PROTECTED_POST_PATHS = {
     "/api/match/resolve/winner",
     "/api/match/resolve/prop",
     "/api/bet/place",
+    "/api/admin/sync/ledger",
     "/api/wallet/adjust",
     "/api/ledger/reset",
 }
@@ -202,6 +203,10 @@ class Handler(BaseHTTPRequestHandler):
                 if not self._require_auth():
                     return
                 self._send_json(wallet_utils.load_wallets())
+            elif parsed.path == "/api/admin/status":
+                if not self._require_auth():
+                    return
+                self._send_json({"ok": True, "status": _admin_status()})
             elif parsed.path.startswith("/api/"):
                 self._send_error(404, "Not found")
             else:
@@ -304,6 +309,8 @@ class Handler(BaseHTTPRequestHandler):
             elif parsed.path == "/api/bet/place":
                 result = _place_bet(body)
                 self._send_json({"ok": True, **result, "discord_embed_update": _schedule_ledger_embed_refresh()})
+            elif parsed.path == "/api/admin/sync/ledger":
+                self._send_json({"ok": True, "discord_embed_update": _schedule_ledger_embed_refresh()})
             elif parsed.path == "/api/wallet/adjust":
                 wallet = _adjust_wallet(body)
                 self._send_json({"ok": True, "wallet": wallet})
@@ -579,6 +586,57 @@ def _schedule_ledger_embed_refresh() -> bool:
     return True
 
 
+def _admin_status() -> dict:
+    ledger = ledger_utils.load_ledger()
+    wallets = wallet_utils.load_wallets()
+    status_counts = {status: 0 for status in sorted(MATCH_STATUSES)}
+
+    for match in ledger.get("matches", []):
+        status = match.get("status", "unknown")
+        status_counts[status] = status_counts.get(status, 0) + 1
+
+    return {
+        "bot": _bot_status(),
+        "data": {
+            "ledgerPath": str(ledger_utils.LEDGER_PATH),
+            "walletsPath": str(wallet_utils.WALLETS_PATH),
+            "matchCount": len(ledger.get("matches", [])),
+            "walletCount": len(wallets),
+            "statusCounts": status_counts,
+            "embedConfigured": bool(ledger.get("embed_message_id") and ledger.get("embed_channel_id")),
+        },
+        "draftRooms": len(draft_rooms),
+        "checkedAt": int(time.time()),
+    }
+
+
+def _bot_status() -> dict:
+    try:
+        import bot
+
+        client = bot.client
+        ready = bool(client.is_ready())
+        user = str(client.user) if client.user else None
+        guilds = getattr(client, "guilds", []) or []
+        latency = getattr(client, "latency", None)
+        return {
+            "connected": ready,
+            "user": user,
+            "guildCount": len(guilds),
+            "guilds": [{"id": str(guild.id), "name": guild.name} for guild in guilds[:25]],
+            "latencyMs": None if latency is None else round(latency * 1000),
+        }
+    except Exception as exc:
+        return {
+            "connected": False,
+            "user": None,
+            "guildCount": 0,
+            "guilds": [],
+            "latencyMs": None,
+            "error": str(exc),
+        }
+
+
 def _admin_password() -> str:
     return os.getenv("GODFORGE_ADMIN_PASSWORD", "")
 
@@ -633,7 +691,9 @@ def _static_path(request_path: str) -> Path | None:
     candidate = (WEB_ROOT / path).resolve()
     root = WEB_ROOT.resolve()
 
-    if not str(candidate).startswith(str(root)):
+    try:
+        candidate.relative_to(root)
+    except ValueError:
         return None
     if candidate.is_dir():
         candidate = candidate / "index.html"
