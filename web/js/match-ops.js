@@ -67,6 +67,7 @@ function renderMatches(matches) {
 
 async function submitCreateMatch(event) {
   event.preventDefault();
+  const form = event.currentTarget;
   const team1 = $("#match-team1")?.value.trim();
   const team2 = $("#match-team2")?.value.trim();
 
@@ -78,7 +79,7 @@ async function submitCreateMatch(event) {
   try {
     const payload = await createMatch(team1, team2);
     showToast(`${payload.match.match_id} created.`);
-    event.currentTarget.reset();
+    form.reset();
     await loadMatches();
   } catch (error) {
     showToast(error.message || "Create match failed. Demo data remains visible.");
