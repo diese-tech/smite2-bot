@@ -268,15 +268,16 @@ def format_help_page2() -> discord.Embed:
     embed = discord.Embed(title="GodForge Commands — Betting", color=0x9B59B6)
 
     embed.add_field(name="Match lifecycle  (admin only)", value=(
-        "`.match create @TeamA @TeamB` — open a match for betting\n"
+        "`.match create TeamA TeamB` — open a match for betting\n"
         "`.match draft GF-XXXX` — lock betting, mark in progress\n"
-        "`.match resolve GF-XXXX winner @Team` — pay out win bets\n"
+        "`.match resolve GF-XXXX winner Team` — pay out win bets\n"
         "`.match resolve GF-XXXX prop @player stat value` — settle a prop"
     ), inline=False)
 
     embed.add_field(name="Placing bets  (#place-bets only)", value=(
-        "`.bet GF-XXXX amount @Team win`\n"
+        "`.bet GF-XXXX amount Team win`\n"
         "`.bet GF-XXXX amount @player stat over|under threshold`\n"
+        "`.wallet check` — your balance  |  `.wallet check @player` — theirs\n"
         "_You start with 500 pts, auto-seeded on your first bet._"
     ), inline=False)
 
@@ -284,7 +285,6 @@ def format_help_page2() -> discord.Embed:
         "`.wallet give @player amount`\n"
         "`.wallet take @player amount`\n"
         "`.wallet set @player amount`\n"
-        "`.wallet check @player`\n"
         "`.wallet wipe` — reset all to 500 pts"
     ), inline=False)
 
