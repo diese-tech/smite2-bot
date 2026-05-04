@@ -1180,8 +1180,8 @@ async def _handle_ledger_command(message: discord.Message):
     if sub == "reset":
         await _ledger_reset(message)
     elif sub == "post":
-        await update_betting_embed(message.channel)
-        await message.channel.send("✅ Ledger embed reposted.")
+        if await update_betting_embed(message.channel):
+            await message.channel.send("✅ Ledger embed reposted.")
     else:
         await message.channel.send("⚠️ Usage: `.ledger reset` or `.ledger post`")
 
@@ -1484,8 +1484,11 @@ async def _place_prop_bet(message: discord.Message, match: dict, match_id: str,
     await update_betting_embed(message.channel)
 
 
-async def update_betting_embed(notify_channel: discord.abc.Messageable | None = None):
-    """Post or in-place edit the persistent betting embed in #betting-ledger."""
+async def update_betting_embed(notify_channel: discord.abc.Messageable | None = None) -> bool:
+    """Post or in-place edit the persistent betting embed in #betting-ledger.
+
+    Returns True if the embed was successfully posted or edited, False otherwise.
+    """
     global _ledger_page
     if not BETTING_LEDGER_CHANNEL_ID:
         log.warning("BETTING_LEDGER_CHANNEL_ID not configured — ledger embed skipped")
@@ -1493,7 +1496,7 @@ async def update_betting_embed(notify_channel: discord.abc.Messageable | None = 
             await notify_channel.send(
                 "⚠️ The betting ledger channel hasn't been configured yet. Please contact an admin."
             )
-        return
+        return False
 
     channel = client.get_channel(BETTING_LEDGER_CHANNEL_ID)
     if channel is None:
@@ -1506,7 +1509,7 @@ async def update_betting_embed(notify_channel: discord.abc.Messageable | None = 
                     "⚠️ The betting ledger channel could not be found. "
                     "Please contact an admin to verify the channel configuration."
                 )
-            return
+            return False
 
     data = ledger_utils.load_ledger()
     total = len(data["matches"])
@@ -1521,7 +1524,7 @@ async def update_betting_embed(notify_channel: discord.abc.Messageable | None = 
         try:
             msg = await channel.fetch_message(msg_id)
             await msg.edit(embed=embed, view=view)
-            return
+            return True
         except (discord.NotFound, discord.HTTPException):
             pass  # fall through to post a new message
         except discord.Forbidden as exc:
@@ -1531,7 +1534,7 @@ async def update_betting_embed(notify_channel: discord.abc.Messageable | None = 
                     "⚠️ The bot doesn't have permission to post in the betting ledger channel. "
                     "Please contact an admin."
                 )
-            return
+            return False
 
     try:
         msg = await channel.send(embed=embed, view=view)
@@ -1542,9 +1545,10 @@ async def update_betting_embed(notify_channel: discord.abc.Messageable | None = 
                 "⚠️ The bot doesn't have permission to post in the betting ledger channel. "
                 "Please contact an admin."
             )
-        return
+        return False
     ledger_utils.update_embed_info(msg.id, BETTING_LEDGER_CHANNEL_ID)
     log.info(f"Betting ledger embed posted to channel {BETTING_LEDGER_CHANNEL_ID}")
+    return True
 
 
 def main():
