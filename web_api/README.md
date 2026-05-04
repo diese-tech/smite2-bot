@@ -91,6 +91,13 @@ POST /api/admin/sync/ledger
 
 `GET /api/commands/custom`, `POST /api/commands/custom`, and `POST /api/commands/custom/delete` provide temporary JSON-backed custom command configuration. They do not execute in Discord until the bot-side custom command resolver is implemented.
 
+Dashboard settings, audit events, and custom command configs default to JSON. To use the stdlib SQLite document store instead:
+
+```text
+GODFORGE_STORAGE=sqlite
+GODFORGE_DB_PATH=/app/data/godforge_dashboard.db
+```
+
 ## Endpoints
 
 ```text

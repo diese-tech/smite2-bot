@@ -28,7 +28,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from utils import audit as audit_utils, custom_commands as custom_command_utils, ledger as ledger_utils, loader, parser, picker, settings as settings_utils, wallet as wallet_utils  # noqa: E402
+from utils import audit as audit_utils, custom_commands as custom_command_utils, dashboard_store, ledger as ledger_utils, loader, parser, picker, settings as settings_utils, wallet as wallet_utils  # noqa: E402
 from utils.draft import DraftState, get_phase_label  # noqa: E402
 from utils.resolver import resolve_god_name  # noqa: E402
 
@@ -724,6 +724,7 @@ def _admin_status() -> dict:
             "embedConfigured": bool(ledger.get("embed_message_id") and ledger.get("embed_channel_id")),
         },
         "modules": _module_health(settings, ledger, wallets),
+        "storage": dashboard_store.storage_status(),
         "draftRooms": len(draft_rooms),
         "checkedAt": int(time.time()),
     }

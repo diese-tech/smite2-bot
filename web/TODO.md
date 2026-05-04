@@ -47,6 +47,7 @@ Version note: the ledger system is the v2.0 milestone. Dashboard bridge work is 
 - Run the local Python API and verify every web endpoint against real bot data after each admin surface expansion.
 - Replace `data/guild_settings.json` with a real database before multi-guild production use.
 - Replace `data/admin_audit.json` with durable database audit rows before serious multi-admin use.
+- SQLite dashboard document storage is staged behind `GODFORGE_STORAGE=sqlite` and `GODFORGE_DB_PATH=/app/data/godforge_dashboard.db`.
 - Use `ASSET_MANIFEST.md` when owned graphics are available, especially god cards, item cards, role icons, and in-game map surfaces for rolls, drafts, and builds.
 
 ## Discord OAuth and Guild Authorization

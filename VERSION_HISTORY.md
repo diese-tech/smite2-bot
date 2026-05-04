@@ -24,6 +24,7 @@ Included or in-progress scope:
 - Planned Discord OAuth client id: `1493371999031136318`.
 - Local Discord OAuth start/callback endpoints staged for `identify guilds`.
 - Temporary password-protected admin dashboard.
+- SQLite dashboard document storage staged behind `GODFORGE_STORAGE=sqlite`.
 - Match Ops, Betting, Wallets, Settings, and Admin Overview panels.
 - Manual Discord ledger sync from the dashboard.
 - Module health, managed-server selector, JSON-backed guild settings, and admin audit feed.

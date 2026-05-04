@@ -16,6 +16,7 @@ import urllib.request
 from utils import ledger as ledger_utils
 from utils import wallet as wallet_utils
 from utils import audit as audit_utils
+from utils import dashboard_store
 from web_api import server as web_server
 
 
@@ -371,6 +372,70 @@ def test_settings_read_write_requires_auth_and_persists(monkeypatch, tmp_ledger,
         assert loaded["settings"]["updated_by"] == "test-admin"
     finally:
         _stop_server(httpd)
+
+
+def test_dashboard_storage_defaults_to_json(monkeypatch):
+    monkeypatch.delenv("GODFORGE_STORAGE", raising=False)
+
+    assert dashboard_store.sqlite_enabled() is False
+    assert dashboard_store.storage_status()["kind"] == "json"
+
+
+def test_sqlite_dashboard_storage_persists_settings_audit_and_commands(
+    monkeypatch,
+    tmp_ledger,
+    tmp_wallets,
+    tmp_settings,
+    tmp_audit,
+    tmp_custom_commands,
+    tmp_dashboard_db,
+):
+    monkeypatch.setenv("GODFORGE_ADMIN_PASSWORD", "secret-test")
+    monkeypatch.setenv("GODFORGE_STORAGE", "sqlite")
+    httpd, base = _start_server()
+    try:
+        cookie = _login(base)
+        status, saved_settings, _ = _request(
+            "POST",
+            f"{base}/api/settings",
+            {
+                "guild_id": "global",
+                "channels": {"adminChannel": "#admin"},
+                "roles": {"adminRole": "Admins"},
+            },
+            cookie,
+        )
+        assert status == 200
+
+        status, saved_command, _ = _request(
+            "POST",
+            f"{base}/api/commands/custom",
+            {
+                "guild_id": "global",
+                "trigger": ".rules",
+                "response": "Read the rules.",
+                "role_gate": "Everyone",
+            },
+            cookie,
+        )
+        assert status == 200
+
+        status, admin_status, _ = _request("GET", f"{base}/api/admin/status", cookie=cookie)
+        status, audit, _ = _request("GET", f"{base}/api/admin/audit", cookie=cookie)
+        status, commands, _ = _request("GET", f"{base}/api/commands/custom?guild_id=global", cookie=cookie)
+
+        assert saved_settings["settings"]["roles"]["adminRole"] == "Admins"
+        assert saved_command["command"]["trigger"] == ".rules"
+        assert admin_status["status"]["storage"]["kind"] == "sqlite"
+        assert admin_status["status"]["storage"]["available"] is True
+        assert audit["events"][0]["action"] == "commands.upsert"
+        assert commands["commands"][0]["trigger"] == ".rules"
+        assert tmp_dashboard_db.exists()
+        assert not tmp_settings.exists()
+        assert not tmp_custom_commands.exists()
+    finally:
+        _stop_server(httpd)
+        monkeypatch.delenv("GODFORGE_STORAGE", raising=False)
 
 
 def test_settings_rejects_bad_guild_ids_and_control_characters(monkeypatch, tmp_ledger, tmp_wallets, tmp_settings):

@@ -19,6 +19,7 @@ const requiredIds = [
   "custom-command-list",
   "settings-form",
   "bot-master-role-chips",
+  "admin-status-summary",
 ];
 
 for (const id of requiredIds) {

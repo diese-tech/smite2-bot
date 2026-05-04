@@ -99,6 +99,11 @@ async function loadAdminStatus() {
           <strong>${data.walletCount ?? 0}</strong>
           <small>${status.draftRooms ?? 0} active web draft rooms</small>
         </article>
+        <article class="ops-stat">
+          <span>Storage</span>
+          <strong>${escapeHtml(storageLabel(status.storage))}</strong>
+          <small>${escapeHtml(storageDetail(status.storage))}</small>
+        </article>
       `;
     }
 
@@ -138,6 +143,23 @@ async function loadAdminStatus() {
       syncState.textContent = "Locked";
     }
   }
+}
+
+function storageLabel(storage = {}) {
+  if (storage.kind === "sqlite" && storage.available) {
+    return "SQLite";
+  }
+  if (storage.kind === "sqlite") {
+    return "SQLite error";
+  }
+  return "JSON";
+}
+
+function storageDetail(storage = {}) {
+  if (storage.error) {
+    return storage.error;
+  }
+  return storage.path || "data/*.json";
 }
 
 function renderServerGrid(guilds) {

@@ -11,6 +11,8 @@ import json
 import time
 from pathlib import Path
 
+from utils import dashboard_store
+
 AUDIT_PATH = Path("data/admin_audit.json")
 MAX_EVENTS = 200
 
@@ -42,6 +44,10 @@ def record_event(action: str, target: str = "", status: str = "ok", metadata: di
 
 
 def _load_raw() -> dict:
+    stored = dashboard_store.load_document("audit", "events", None)
+    if stored is not None:
+        return stored if isinstance(stored.get("events"), list) else {"events": []}
+
     if not AUDIT_PATH.exists():
         return {"events": []}
     try:
@@ -53,6 +59,9 @@ def _load_raw() -> dict:
 
 
 def _save_raw(data: dict):
+    if dashboard_store.save_document("audit", "events", data):
+        return
+
     AUDIT_PATH.parent.mkdir(parents=True, exist_ok=True)
     with open(AUDIT_PATH, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2)

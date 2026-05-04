@@ -12,6 +12,8 @@ import re
 import time
 from pathlib import Path
 
+from utils import dashboard_store
+
 SETTINGS_PATH = Path("data/guild_settings.json")
 DEFAULT_GUILD_ID = "global"
 
@@ -49,6 +51,10 @@ def default_settings(guild_id: str = DEFAULT_GUILD_ID) -> dict:
 
 
 def load_settings() -> dict:
+    stored = dashboard_store.load_document("settings", "guilds", None)
+    if stored is not None:
+        return stored if isinstance(stored.get("guilds"), dict) else {"guilds": {}}
+
     if not SETTINGS_PATH.exists():
         return {"guilds": {}}
     try:
@@ -60,6 +66,9 @@ def load_settings() -> dict:
 
 
 def save_settings(data: dict):
+    if dashboard_store.save_document("settings", "guilds", data):
+        return
+
     SETTINGS_PATH.parent.mkdir(parents=True, exist_ok=True)
     with open(SETTINGS_PATH, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2)

@@ -12,6 +12,8 @@ import re
 import time
 from pathlib import Path
 
+from utils import dashboard_store
+
 COMMANDS_PATH = Path("data/custom_commands.json")
 DEFAULT_GUILD_ID = "global"
 
@@ -50,6 +52,10 @@ def delete_command(guild_id: str, trigger: str) -> bool:
 
 
 def _load_raw() -> dict:
+    stored = dashboard_store.load_document("custom_commands", "guilds", None)
+    if stored is not None:
+        return stored if isinstance(stored.get("guilds"), dict) else {"guilds": {}}
+
     if not COMMANDS_PATH.exists():
         return {"guilds": {}}
     try:
@@ -61,6 +67,9 @@ def _load_raw() -> dict:
 
 
 def _save_raw(data: dict):
+    if dashboard_store.save_document("custom_commands", "guilds", data):
+        return
+
     COMMANDS_PATH.parent.mkdir(parents=True, exist_ok=True)
     with open(COMMANDS_PATH, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2)

@@ -83,6 +83,15 @@ def tmp_custom_commands(tmp_path, monkeypatch):
     return commands_file
 
 
+@pytest.fixture()
+def tmp_dashboard_db(tmp_path, monkeypatch):
+    """Redirect dashboard SQLite storage to a fresh tmp file."""
+    import utils.dashboard_store as store_mod
+    db_file = tmp_path / "godforge_dashboard.db"
+    monkeypatch.setattr(store_mod, "DB_PATH", db_file)
+    return db_file
+
+
 @pytest.fixture(autouse=True)
 def tmp_audit(tmp_path, monkeypatch):
     """Redirect admin audit I/O to a fresh tmp file for each test."""

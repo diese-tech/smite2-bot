@@ -184,6 +184,12 @@ type AdminStatus = {
     embedConfigured: boolean;
   };
   modules: ModuleHealth[];
+  storage: {
+    kind: "json" | "sqlite";
+    path: string;
+    available: boolean;
+    error?: string;
+  };
   draftRooms: number;
   checkedAt: number;
 };

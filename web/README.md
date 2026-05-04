@@ -51,6 +51,15 @@ The Settings module now saves temporary guild defaults to `data/guild_settings.j
 
 The Command Config module saves temporary custom command configs to `data/custom_commands.json`. These configs are not executed by the bot yet; they stage the schema for future guild-scoped custom command execution.
 
+Dashboard settings, audit, and custom command configs can use SQLite instead of JSON by setting:
+
+```text
+GODFORGE_STORAGE=sqlite
+GODFORGE_DB_PATH=/app/data/godforge_dashboard.db
+```
+
+JSON remains the default until the storage switch is explicitly enabled.
+
 ## Combined Railway Launcher
 
 The fast live deployment path uses the repo-root launcher:
