@@ -71,6 +71,19 @@ async def test_update_embed_edits_existing_message(tmp_ledger, mock_ledger_chann
     mock_ledger_channel.send.assert_not_called()
 
 
+def test_reset_ledger_preserves_embed_pointer(tmp_ledger, mock_ledger_channel, mock_sent_message):
+    """reset_ledger clears matches but keeps the stored embed target for in-place refresh."""
+    ledger_utils.create_match("@TeamA", "@TeamB")
+    ledger_utils.update_embed_info(mock_sent_message.id, mock_ledger_channel.id)
+
+    ledger_utils.reset_ledger()
+
+    data = ledger_utils.load_ledger()
+    assert data["matches"] == []
+    assert data["embed_message_id"] == mock_sent_message.id
+    assert data["embed_channel_id"] == mock_ledger_channel.id
+
+
 # ---------------------------------------------------------------------------
 # Test 3: notifies user when BETTING_LEDGER_CHANNEL_ID is 0 (not configured)
 # ---------------------------------------------------------------------------

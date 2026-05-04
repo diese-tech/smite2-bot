@@ -10,6 +10,7 @@ made.
 from __future__ import annotations
 
 import json
+import asyncio
 import base64
 import hashlib
 import hmac
@@ -269,7 +270,7 @@ class Handler(BaseHTTPRequestHandler):
                 team1 = _required_str(body, "team1")
                 team2 = _required_str(body, "team2")
                 match = ledger_utils.create_match(team1, team2)
-                self._send_json({"ok": True, "match": match})
+                self._send_json({"ok": True, "match": match, "discord_embed_update": _schedule_ledger_embed_refresh()})
             elif parsed.path == "/api/match/status":
                 match_id = _match_id(body)
                 status = _required_str(body, "status")
@@ -279,7 +280,7 @@ class Handler(BaseHTTPRequestHandler):
                     self._send_error(404, f"Match not found: {match_id}")
                     return
                 ledger_utils.set_match_status(match_id, status)
-                self._send_json({"ok": True, "match": ledger_utils.get_match(match_id)})
+                self._send_json({"ok": True, "match": ledger_utils.get_match(match_id), "discord_embed_update": _schedule_ledger_embed_refresh()})
             elif parsed.path == "/api/match/resolve/winner":
                 match_id = _match_id(body)
                 winner = _required_str(body, "winner")
@@ -288,7 +289,7 @@ class Handler(BaseHTTPRequestHandler):
                     return
                 payouts = ledger_utils.resolve_win_bets(match_id, winner)
                 wallet_utils.apply_payouts(payouts)
-                self._send_json({"ok": True, "match": ledger_utils.get_match(match_id), "payouts": payouts})
+                self._send_json({"ok": True, "match": ledger_utils.get_match(match_id), "payouts": payouts, "discord_embed_update": _schedule_ledger_embed_refresh()})
             elif parsed.path == "/api/match/resolve/prop":
                 match_id = _match_id(body)
                 player = _required_str(body, "player")
@@ -299,10 +300,10 @@ class Handler(BaseHTTPRequestHandler):
                     return
                 payouts, had_bets = ledger_utils.resolve_prop_bets(match_id, player, stat, actual_value)
                 wallet_utils.apply_payouts(payouts)
-                self._send_json({"ok": True, "match": ledger_utils.get_match(match_id), "payouts": payouts, "had_bets": had_bets})
+                self._send_json({"ok": True, "match": ledger_utils.get_match(match_id), "payouts": payouts, "had_bets": had_bets, "discord_embed_update": _schedule_ledger_embed_refresh()})
             elif parsed.path == "/api/bet/place":
                 result = _place_bet(body)
-                self._send_json({"ok": True, **result})
+                self._send_json({"ok": True, **result, "discord_embed_update": _schedule_ledger_embed_refresh()})
             elif parsed.path == "/api/wallet/adjust":
                 wallet = _adjust_wallet(body)
                 self._send_json({"ok": True, "wallet": wallet})
@@ -310,7 +311,7 @@ class Handler(BaseHTTPRequestHandler):
                 ledger = ledger_utils.load_ledger()
                 cleared = len(ledger.get("matches", []))
                 ledger_utils.reset_ledger()
-                self._send_json({"ok": True, "cleared": cleared})
+                self._send_json({"ok": True, "cleared": cleared, "discord_embed_update": _schedule_ledger_embed_refresh()})
             else:
                 self._send_error(404, "Not found")
         except Exception as exc:
@@ -551,6 +552,33 @@ def _normalize_team(value: str) -> str:
     return re.sub(r"\s+", " ", value.strip().lstrip("@").lower())
 
 
+def _schedule_ledger_embed_refresh() -> bool:
+    try:
+        import bot  # Imported lazily so the local API can still run standalone.
+        loop = getattr(bot.client, "loop", None)
+    except Exception as exc:
+        print(f"Discord ledger refresh unavailable: {exc}")
+        return False
+
+    try:
+        if loop is None or not loop.is_running():
+            return False
+    except Exception as exc:
+        print(f"Discord ledger refresh unavailable: {exc}")
+        return False
+
+    future = asyncio.run_coroutine_threadsafe(bot.update_betting_embed(), loop)
+
+    def _log_result(done):
+        try:
+            done.result()
+        except Exception as exc:  # pragma: no cover - callback path
+            print(f"Discord ledger refresh failed: {exc}")
+
+    future.add_done_callback(_log_result)
+    return True
+
+
 def _admin_password() -> str:
     return os.getenv("GODFORGE_ADMIN_PASSWORD", "")
 
@@ -615,7 +643,9 @@ def _static_path(request_path: str) -> Path | None:
 
 
 def create_server(host: str | None = None, port: int | None = None) -> ThreadingHTTPServer:
-    return ThreadingHTTPServer((host or HOST, port or PORT), Handler)
+    resolved_host = HOST if host is None else host
+    resolved_port = PORT if port is None else port
+    return ThreadingHTTPServer((resolved_host, resolved_port), Handler)
 
 
 def main():

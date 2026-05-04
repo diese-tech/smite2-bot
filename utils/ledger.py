@@ -292,6 +292,11 @@ def all_matches_in_progress(ledger: dict | None = None) -> bool:
     return all(m["status"] != "betting_open" for m in matches)
 
 
-def reset_ledger():
-    """Wipe all matches and embed state. Wallets are unaffected."""
-    save_ledger({"matches": [], "embed_message_id": None, "embed_channel_id": None})
+def reset_ledger(preserve_embed: bool = True):
+    """Wipe all matches. Wallets are unaffected."""
+    current = load_ledger() if preserve_embed else _empty_ledger()
+    save_ledger({
+        "matches": [],
+        "embed_message_id": current.get("embed_message_id"),
+        "embed_channel_id": current.get("embed_channel_id"),
+    })
