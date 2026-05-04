@@ -618,11 +618,37 @@ h1 {
   color: var(--muted);
 }
 
+.sidebar-section {
+  margin-top: 18px;
+}
+
+.sidebar-section-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0 4px 8px;
+  color: var(--text);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.sidebar-section-title small {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
 .module-tab {
   display: flex;
   width: 100%;
   min-height: 42px;
   align-items: center;
+  gap: 10px;
   margin-bottom: 6px;
   border: 1px solid transparent;
   border-radius: 7px;
@@ -631,6 +657,29 @@ h1 {
   color: var(--muted);
   font-weight: 800;
   text-align: left;
+}
+
+.module-tab span:last-child {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.module-dot {
+  width: 8px;
+  height: 8px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: rgba(174, 183, 203, 0.68);
+}
+
+.module-dot--live {
+  background: var(--green);
+  box-shadow: 0 0 16px rgba(84, 210, 143, 0.48);
+}
+
+.module-dot--staged {
+  background: var(--gold);
+  box-shadow: 0 0 16px rgba(240, 189, 77, 0.4);
 }
 
 .module-tab:hover,
@@ -878,9 +927,100 @@ h1 {
   font-weight: 800;
 }
 
+.server-selector-panel,
 .module-health,
 .audit-feed {
   margin-top: 16px;
+}
+
+.server-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 10px;
+}
+
+.server-select-card {
+  min-width: 0;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  padding: 8px;
+  transition: border-color 180ms ease, background 180ms ease;
+}
+
+.server-select-card.is-selected {
+  border-color: rgba(240, 189, 77, 0.34);
+  background: rgba(240, 189, 77, 0.08);
+}
+
+.server-card-art {
+  display: grid;
+  min-height: 126px;
+  place-items: center;
+  border-radius: 8px;
+  background:
+    radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.12), transparent 26%),
+    linear-gradient(135deg, rgba(88, 101, 242, 0.18), rgba(240, 189, 77, 0.08));
+}
+
+.server-card-art--1 {
+  background:
+    radial-gradient(circle at 44% 48%, rgba(255, 255, 255, 0.13), transparent 25%),
+    linear-gradient(135deg, rgba(84, 210, 143, 0.16), rgba(88, 101, 242, 0.16));
+}
+
+.server-card-art--2 {
+  background:
+    radial-gradient(circle at 52% 45%, rgba(255, 255, 255, 0.14), transparent 24%),
+    linear-gradient(135deg, rgba(255, 112, 64, 0.16), rgba(88, 101, 242, 0.12));
+}
+
+.server-card-art--3 {
+  background:
+    radial-gradient(circle at 50% 52%, rgba(255, 255, 255, 0.13), transparent 24%),
+    linear-gradient(135deg, rgba(77, 163, 255, 0.18), rgba(240, 189, 77, 0.08));
+}
+
+.server-card-art--4 {
+  background:
+    radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.12), transparent 25%),
+    linear-gradient(135deg, rgba(140, 125, 255, 0.18), rgba(84, 210, 143, 0.1));
+}
+
+.server-card-art--5 {
+  background:
+    radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.13), transparent 25%),
+    linear-gradient(135deg, rgba(240, 189, 77, 0.14), rgba(255, 112, 64, 0.12));
+}
+
+.server-card-art span {
+  display: grid;
+  width: 72px;
+  height: 72px;
+  place-items: center;
+  border: 2px solid rgba(255, 255, 255, 0.78);
+  border-radius: 50%;
+  background: rgba(6, 9, 16, 0.56);
+  color: var(--text);
+  font-weight: 900;
+}
+
+.server-select-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-top: 12px;
+}
+
+.server-select-footer strong,
+.server-select-footer small {
+  display: block;
+}
+
+.server-select-footer small {
+  margin-top: 4px;
+  color: var(--muted);
 }
 
 .module-health-grid {
@@ -1007,6 +1147,136 @@ h1 {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
+}
+
+.readiness-list {
+  display: grid;
+  gap: 10px;
+  margin: 16px 0 22px;
+}
+
+.readiness-list div {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: 10px;
+  row-gap: 3px;
+  align-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.readiness-list small {
+  grid-column: 2;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.settings-warning {
+  border: 1px solid rgba(240, 189, 77, 0.46);
+  border-radius: 8px;
+  margin: 12px 0 18px;
+  padding: 14px;
+  background: rgba(240, 189, 77, 0.1);
+  color: var(--gold-2);
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.55;
+}
+
+.settings-label {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.role-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-height: 50px;
+  align-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 10px;
+  background: rgba(5, 8, 14, 0.72);
+}
+
+.role-chip-row span {
+  border: 1px solid rgba(88, 101, 242, 0.34);
+  border-radius: 999px;
+  padding: 7px 10px;
+  background: rgba(88, 101, 242, 0.14);
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.permission-radio-group {
+  display: grid;
+  gap: 12px;
+  margin: 18px 0 24px;
+}
+
+.permission-radio-group p {
+  margin-bottom: 0;
+  color: var(--text);
+  font-weight: 900;
+}
+
+.permission-radio-group label {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: 10px;
+  row-gap: 4px;
+  align-items: center;
+}
+
+.permission-radio-group input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--blue);
+}
+
+.permission-radio-group small {
+  grid-column: 2;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.command-list-heading {
+  margin-top: 18px;
+}
+
+.custom-command-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.custom-command-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.custom-command-row strong,
+.custom-command-row span {
+  display: block;
+}
+
+.custom-command-row span:not(.pill) {
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 13px;
 }
 
 .highlight-card {
@@ -2034,6 +2304,7 @@ textarea:focus {
 
   .metric-row,
   .ops-stat-grid,
+  .server-grid,
   .module-health-grid,
   .portal-grid,
   .card-grid,
@@ -2105,6 +2376,7 @@ textarea:focus {
 
   .metric-row,
   .ops-stat-grid,
+  .server-grid,
   .module-health-grid,
   .portal-grid,
   .card-grid,

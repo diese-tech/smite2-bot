@@ -1,5 +1,6 @@
 import { getAdminAudit, getAdminStatus, getAuthStatus, getHealth, login, logout, setApiOnline, syncLedgerEmbed } from "./api.js";
 import { initBetting, loadBetting } from "./betting.js";
+import { initCommands, loadCustomCommands } from "./commands.js";
 import { initDraft } from "./draft.js";
 import { initMatchOps, loadMatches } from "./match-ops.js";
 import { initRandomizer } from "./randomizer.js";
@@ -20,6 +21,7 @@ export const dashboardTitles = {
 };
 
 let isAuthenticated = false;
+let selectedGuildId = window.localStorage.getItem("godforge:selectedGuildId") || "";
 
 export function $(selector, root = document) {
   return root.querySelector(selector);
@@ -59,11 +61,12 @@ function setApiStatus(online) {
 
 async function loadAdminStatus() {
   const summary = $("#admin-status-summary");
+  const serverGrid = $("#admin-server-grid");
   const guildList = $("#admin-guild-list");
   const moduleGrid = $("#module-health-grid");
   const syncState = $("#admin-sync-state");
 
-  if (!summary && !guildList && !moduleGrid && !syncState) {
+  if (!summary && !serverGrid && !guildList && !moduleGrid && !syncState) {
     return;
   }
 
@@ -106,6 +109,11 @@ async function loadAdminStatus() {
         : `<span>No guilds reported yet.</span>`;
     }
 
+    if (serverGrid) {
+      serverGrid.innerHTML = renderServerGrid(bot.guilds || []);
+      bindServerSelectActions(serverGrid);
+    }
+
     if (moduleGrid) {
       moduleGrid.innerHTML = renderModuleHealth(status.modules || []);
     }
@@ -120,12 +128,85 @@ async function loadAdminStatus() {
     if (guildList) {
       guildList.innerHTML = `<span>Login required</span>`;
     }
+    if (serverGrid) {
+      serverGrid.innerHTML = `<p class="empty-state">${error.status === 401 ? "Admin login required." : "Servers unavailable."}</p>`;
+    }
     if (moduleGrid) {
       moduleGrid.innerHTML = `<p class="empty-state">${error.status === 401 ? "Admin login required." : "Module health unavailable."}</p>`;
     }
     if (syncState) {
       syncState.textContent = "Locked";
     }
+  }
+}
+
+function renderServerGrid(guilds) {
+  if (!guilds.length) {
+    return `<p class="empty-state">No Discord servers reported by the bot yet.</p>`;
+  }
+
+  return guilds.map((guild, index) => {
+    const name = guild.name || "Discord Server";
+    const initials = serverInitials(name);
+    const action = index < 6 ? "Open" : "Setup";
+    const guildId = String(guild.id || "");
+    const selected = selectedGuildId && guildId === selectedGuildId;
+
+    return `
+      <article class="server-select-card ${selected ? "is-selected" : ""}">
+        <div class="server-card-art server-card-art--${index % 6}">
+          <span>${escapeHtml(initials)}</span>
+        </div>
+        <div class="server-select-footer">
+          <div>
+            <strong>${escapeHtml(name)}</strong>
+            <small>${selected ? "Selected server" : "Bot connected"}</small>
+          </div>
+          <button class="button ${action === "Open" ? "button-primary" : "button-secondary"}" type="button" data-demo-action="server-select" data-guild-id="${escapeHtml(guildId)}" data-guild-name="${escapeHtml(name)}">${selected ? "Selected" : action}</button>
+        </div>
+      </article>
+    `;
+  }).join("");
+}
+
+function serverInitials(name) {
+  return String(name || "GF")
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join("")
+    .toUpperCase() || "GF";
+}
+
+function bindServerSelectActions(root) {
+  $all("[data-demo-action='server-select']", root).forEach((button) => {
+    button.addEventListener("click", () => {
+      const guildId = button.dataset.guildId || "";
+      const guildName = button.dataset.guildName || "Discord Server";
+
+      selectedGuildId = guildId;
+      window.localStorage.setItem("godforge:selectedGuildId", guildId);
+      updateSelectedServer(guildName, guildId);
+      loadAdminStatus();
+      showToast("Server selected locally. OAuth will make this guild-scoped.");
+    });
+  });
+}
+
+function updateSelectedServer(name, guildId = "") {
+  const avatar = $("#selected-server-avatar");
+  const title = $("#selected-server-name");
+  const meta = $("#selected-server-meta");
+
+  if (avatar) {
+    avatar.textContent = serverInitials(name);
+  }
+  if (title) {
+    title.textContent = name;
+  }
+  if (meta) {
+    meta.textContent = guildId ? `Guild ${guildId}` : "Demo server";
   }
 }
 
@@ -222,6 +303,9 @@ function activateDashboardTab(tabName) {
 
   if (isAuthenticated && tabName === "match") {
     loadMatches();
+  }
+  if (isAuthenticated && tabName === "commands") {
+    loadCustomCommands();
   }
   if (isAuthenticated && tabName === "betting") {
     loadBetting();
@@ -354,7 +438,7 @@ function bindAuth() {
       $("#admin-password").value = "";
       setAuthState(true, true);
       showToast("Admin dashboard unlocked.");
-      await Promise.all([loadMatches(), loadBetting(), loadAdminStatus(), loadAdminAudit(), loadSettings()]);
+      await Promise.all([loadMatches(), loadBetting(), loadAdminStatus(), loadAdminAudit(), loadSettings(), loadCustomCommands()]);
     } catch (error) {
       showToast(error.message || "Admin login failed.");
     }
@@ -389,6 +473,7 @@ function init() {
   bindDemoActions();
   bindAuth();
   bindAdminControls();
+  initCommands();
   initRandomizer();
   initDraft();
   initMatchOps();
@@ -397,6 +482,7 @@ function init() {
   checkApiHealth();
   refreshAuthStatus();
   updateCommandPreview();
+  updateSelectedServer($("#selected-server-name")?.textContent || "Smite Night Arena", selectedGuildId);
 }
 
 init();

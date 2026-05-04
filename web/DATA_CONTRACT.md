@@ -218,6 +218,9 @@ type GuildSettings = {
     adminRole: string;
     captainRole: string;
   };
+  permissions: {
+    monetizeAccess: "none" | "read" | "manage";
+  };
   updated_at: number | null;
   updated_by: string | null;
 };
@@ -235,5 +238,21 @@ type AdminAuditEvent = {
   target: string;
   status: string;
   metadata: Record<string, string | number | boolean | null>;
+};
+```
+
+## Custom Command Config
+
+`GET /api/commands/custom?guild_id=global`, `POST /api/commands/custom`, and `POST /api/commands/custom/delete` are protected. These records are configuration only until the bot-side custom command resolver is implemented.
+
+```ts
+type CustomCommandConfig = {
+  trigger: string;
+  response: string;
+  channel: string;
+  role_gate: "Everyone" | "Captains" | "Admins";
+  cooldown: string;
+  enabled: boolean;
+  updated_at: number;
 };
 ```

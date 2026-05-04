@@ -74,6 +74,8 @@ POST /api/admin/sync/ledger
 
 `GET /api/settings` and `POST /api/settings` provide temporary JSON-backed guild settings for the admin dashboard. They are scoped by `guild_id`, default to `global`, and are intended to be replaced by Discord OAuth, guild permissions, and database-backed settings later.
 
+`GET /api/commands/custom`, `POST /api/commands/custom`, and `POST /api/commands/custom/delete` provide temporary JSON-backed custom command configuration. They do not execute in Discord until the bot-side custom command resolver is implemented.
+
 ## Endpoints
 
 ```text
@@ -81,6 +83,7 @@ GET  /api/health
 GET  /api/auth/status
 GET  /api/admin/audit?limit=25
 GET  /api/admin/status
+GET  /api/commands/custom?guild_id=global
 GET  /api/gods/roll?role=jungle&source=website
 GET  /api/gods/roll5?role=jungle&source=website
 GET  /api/builds/roll?role=adc&type=standard&count=6
@@ -91,6 +94,8 @@ POST /api/auth/login
 POST /api/auth/logout
 POST /api/admin/sync/ledger
 POST /api/command
+POST /api/commands/custom
+POST /api/commands/custom/delete
 POST /api/draft/start
 POST /api/draft/action
 POST /api/draft/undo
@@ -148,8 +153,25 @@ POST /api/settings
   "roles": {
     "adminRole": "Admins",
     "captainRole": "Captains"
+  },
+  "permissions": {
+    "monetizeAccess": "none"
   }
 }
+
+POST /api/commands/custom
+{
+  "guild_id": "global",
+  "trigger": ".scrimrules",
+  "response": "Post lobby code, captains, and draft reminder.",
+  "channel": "#captains",
+  "role_gate": "Captains",
+  "cooldown": "15s",
+  "enabled": true
+}
+
+POST /api/commands/custom/delete
+{ "guild_id": "global", "trigger": ".scrimrules" }
 ```
 
 `/api/wallet/adjust` accepts `give`, `take`, or `set`. Wallets are stored in the existing `data/wallets.json` shape keyed by user id. For local dashboard testing without Discord ids, the API derives a stable local id from `target`.

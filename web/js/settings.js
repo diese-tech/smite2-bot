@@ -1,5 +1,5 @@
 import { getSettings, saveSettings } from "./api.js";
-import { $, showToast } from "./ui.js";
+import { $, escapeHtml, showToast } from "./ui.js";
 
 const DEFAULT_GUILD_ID = "global";
 
@@ -31,6 +31,8 @@ function renderSettings(settings) {
   setValue("setting-admin-channel", settings.channels?.adminChannel);
   setValue("setting-admin-role", settings.roles?.adminRole);
   setValue("setting-captain-role", settings.roles?.captainRole);
+  setRadio("setting-monetize-access", settings.permissions?.monetizeAccess || "none");
+  renderBotMasterChips(settings.roles || {});
 
   const meta = $("#settings-meta");
   if (meta) {
@@ -61,6 +63,9 @@ async function submitSettings(event) {
       adminRole: $("#setting-admin-role")?.value || "",
       captainRole: $("#setting-captain-role")?.value || "",
     },
+    permissions: {
+      monetizeAccess: document.querySelector('input[name="setting-monetize-access"]:checked')?.value || "none",
+    },
   };
 
   try {
@@ -84,4 +89,23 @@ function setValue(id, value) {
   if (input) {
     input.value = value || "";
   }
+}
+
+function setRadio(name, value) {
+  document.querySelectorAll(`input[name="${name}"]`).forEach((input) => {
+    input.checked = input.value === value;
+  });
+}
+
+function renderBotMasterChips(roles) {
+  const container = $("#bot-master-role-chips");
+
+  if (!container) {
+    return;
+  }
+
+  const chips = [roles.adminRole, roles.captainRole].filter(Boolean);
+  container.innerHTML = chips.length
+    ? chips.map((role) => `<span>${escapeHtml(role)}</span>`).join("")
+    : `<span>No role labels configured yet</span>`;
 }

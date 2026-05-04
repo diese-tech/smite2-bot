@@ -6,7 +6,9 @@ real Discord connection.
 """
 
 import json
+import sys
 import threading
+import types
 import urllib.error
 import urllib.request
 
@@ -186,6 +188,39 @@ def test_admin_status_module_health_reflects_saved_settings(monkeypatch, tmp_led
         _stop_server(httpd)
 
 
+def test_admin_status_reports_limited_guild_telemetry(monkeypatch, tmp_ledger, tmp_wallets, tmp_settings):
+    monkeypatch.setenv("GODFORGE_ADMIN_PASSWORD", "secret-test")
+
+    class FakeGuild:
+        def __init__(self, index):
+            self.id = index
+            self.name = f"Guild {index}"
+
+    fake_client = types.SimpleNamespace(
+        is_ready=lambda: True,
+        user="GodForge#5322",
+        guilds=[FakeGuild(index) for index in range(30)],
+        latency=0.123,
+    )
+    fake_bot = types.SimpleNamespace(client=fake_client)
+    monkeypatch.setitem(sys.modules, "bot", fake_bot)
+
+    httpd, base = _start_server()
+    try:
+        cookie = _login(base)
+        status, payload, _ = _request("GET", f"{base}/api/admin/status", cookie=cookie)
+        bot = payload["status"]["bot"]
+
+        assert status == 200
+        assert bot["connected"] is True
+        assert bot["user"] == "GodForge#5322"
+        assert bot["guildCount"] == 30
+        assert len(bot["guilds"]) == 25
+        assert bot["latencyMs"] == 123
+    finally:
+        _stop_server(httpd)
+
+
 def test_manual_ledger_sync_is_protected_and_schedules_refresh(monkeypatch, tmp_ledger, tmp_wallets):
     monkeypatch.setenv("GODFORGE_ADMIN_PASSWORD", "secret-test")
     calls = []
@@ -219,6 +254,7 @@ def test_settings_read_write_requires_auth_and_persists(monkeypatch, tmp_ledger,
             "features": {"botEnabled": True, "draftsEnabled": False, "unknown": False},
             "channels": {"matchChannel": "#matches", "bettingChannel": "#bets"},
             "roles": {"adminRole": "Admins", "captainRole": "Captains"},
+            "permissions": {"monetizeAccess": "read"},
         }
         status, saved, _ = _request("POST", f"{base}/api/settings", update, cookie)
         assert status == 200
@@ -229,6 +265,7 @@ def test_settings_read_write_requires_auth_and_persists(monkeypatch, tmp_ledger,
         status, loaded, _ = _request("GET", f"{base}/api/settings?guild_id=global", cookie=cookie)
         assert status == 200
         assert loaded["settings"]["roles"]["captainRole"] == "Captains"
+        assert loaded["settings"]["permissions"]["monetizeAccess"] == "read"
         assert loaded["settings"]["updated_by"] == "test-admin"
     finally:
         _stop_server(httpd)
@@ -243,6 +280,7 @@ def test_settings_rejects_bad_guild_ids_and_control_characters(monkeypatch, tmp_
             {"guild_id": "../secret", "features": {"botEnabled": True}},
             {"guild_id": "global", "channels": {"matchChannel": "#matches\nSet-Cookie: hacked=true"}},
             {"guild_id": "global", "roles": {"adminRole": "A" * 81}},
+            {"guild_id": "global", "permissions": {"monetizeAccess": "root"}},
         ]
 
         for payload in bad_payloads:
@@ -273,6 +311,60 @@ def test_admin_audit_requires_auth_and_records_mutations(monkeypatch, tmp_ledger
         assert status == 200
         assert audit["events"][0]["action"] == "match.create"
         assert audit["events"][0]["target"] == created["match"]["match_id"]
+    finally:
+        _stop_server(httpd)
+
+
+def test_custom_command_configs_are_protected_persisted_and_deletable(monkeypatch, tmp_ledger, tmp_wallets, tmp_custom_commands):
+    monkeypatch.setenv("GODFORGE_ADMIN_PASSWORD", "secret-test")
+    httpd, base = _start_server()
+    try:
+        status, payload, _ = _request("GET", f"{base}/api/commands/custom?guild_id=global")
+        assert status == 401
+
+        cookie = _login(base)
+        command = {
+            "guild_id": "global",
+            "trigger": ".scrimrules",
+            "response": "Post lobby code and draft reminder.",
+            "channel": "#captains",
+            "role_gate": "Captains",
+            "cooldown": "15s",
+            "enabled": True,
+        }
+        status, saved, _ = _request("POST", f"{base}/api/commands/custom", command, cookie)
+        assert status == 200
+        assert saved["command"]["trigger"] == ".scrimrules"
+
+        status, loaded, _ = _request("GET", f"{base}/api/commands/custom?guild_id=global", cookie=cookie)
+        assert status == 200
+        assert loaded["commands"][0]["role_gate"] == "Captains"
+
+        status, deleted, _ = _request("POST", f"{base}/api/commands/custom/delete", {"guild_id": "global", "trigger": ".scrimrules"}, cookie)
+        assert status == 200
+        assert deleted["deleted"] is True
+        assert deleted["commands"] == []
+    finally:
+        _stop_server(httpd)
+
+
+def test_custom_command_configs_reject_conflicts_and_malicious_payloads(monkeypatch, tmp_ledger, tmp_wallets, tmp_custom_commands):
+    monkeypatch.setenv("GODFORGE_ADMIN_PASSWORD", "secret-test")
+    httpd, base = _start_server()
+    try:
+        cookie = _login(base)
+        bad_payloads = [
+            {"guild_id": "global", "trigger": ".rg", "response": "conflict"},
+            {"guild_id": "../secret", "trigger": ".safe", "response": "bad guild"},
+            {"guild_id": "global", "trigger": ".x", "response": "too short"},
+            {"guild_id": "global", "trigger": ".safe", "response": "ok", "role_gate": "Root"},
+            {"guild_id": "global", "trigger": ".safe", "response": "A" * 601},
+        ]
+
+        for payload in bad_payloads:
+            status, response, _ = _request("POST", f"{base}/api/commands/custom", payload, cookie)
+            assert status == 400
+            assert response["ok"] is False
     finally:
         _stop_server(httpd)
 

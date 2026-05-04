@@ -2,6 +2,8 @@
 
 This file tracks work intentionally skipped in the static prototype.
 
+Version note: the ledger system is the v2.0 milestone. Substantial dashboard bridge work after that should be grouped, tagged, and documented as v2.1+ work in `../VERSION_HISTORY.md` before release.
+
 ## Completed in the Local Prototype
 
 - Added a dashboard-style admin portal surface with module navigation.
@@ -13,6 +15,12 @@ This file tracks work intentionally skipped in the static prototype.
 - Added protected admin operations telemetry and a manual Discord ledger embed sync control for the combined Railway process.
 - Added temporary JSON-backed guild settings for feature toggles, channel labels, and admin/captain role labels.
 - Added a temporary JSON-backed admin audit feed for dashboard actions.
+- Added a MEE6-inspired managed-server selector grid fed by live bot guild telemetry.
+- Grouped the dashboard sidebar into MEE6-style module categories with live/staged status markers.
+- Added local selected-server state in the sidebar as a placeholder for future Discord OAuth guild scoping.
+- Added a production readiness panel for auth, guild permissions, and database gates.
+- Added Bot Masters permission staging for role labels and future monetization access levels.
+- Added temporary JSON-backed custom command configuration staging.
 - Kept Discord auth, storage, deployment, secrets, bot runtime files, and production assets untouched.
 
 ## Bot Command Surface Parity
@@ -39,7 +47,7 @@ This file tracks work intentionally skipped in the static prototype.
 - Run the local Python API and verify every web endpoint against real bot data after each admin surface expansion.
 - Replace `data/guild_settings.json` with a real database before multi-guild production use.
 - Replace `data/admin_audit.json` with durable database audit rows before serious multi-admin use.
-- Start an asset manifest for owned graphics, especially god cards, item cards, role icons, and in-game map surfaces for rolls, drafts, and builds.
+- Use `ASSET_MANIFEST.md` when owned graphics are available, especially god cards, item cards, role icons, and in-game map surfaces for rolls, drafts, and builds.
 
 ## Discord OAuth and Guild Authorization
 
@@ -59,6 +67,7 @@ This file tracks work intentionally skipped in the static prototype.
 ## Custom Command Execution
 
 - Define a custom command schema: trigger, response, enabled state, channel scope, role gate, cooldown, and audit metadata.
+- Custom command schema is staged in `data/custom_commands.json`.
 - Add a bot-side resolver before unknown commands are silently ignored.
 - Enforce guild/channel/role/cooldown checks in the bot before responding.
 - Add conflict handling for built-in commands and duplicate custom triggers.
@@ -83,6 +92,7 @@ This file tracks work intentionally skipped in the static prototype.
   - `conquest-map`
   - `draft-map`
   - `roll-map`
+- Asset manifest exists at `ASSET_MANIFEST.md`.
 - Ingest graphics from the future Google Drive or zip source.
 - Normalize filenames and dimensions.
 - Replace temporary public god portraits and CSS placeholder surfaces with owned assets.

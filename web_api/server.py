@@ -27,7 +27,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from utils import audit as audit_utils, ledger as ledger_utils, loader, parser, picker, settings as settings_utils, wallet as wallet_utils  # noqa: E402
+from utils import audit as audit_utils, custom_commands as custom_command_utils, ledger as ledger_utils, loader, parser, picker, settings as settings_utils, wallet as wallet_utils  # noqa: E402
 from utils.draft import DraftState, get_phase_label  # noqa: E402
 from utils.resolver import resolve_god_name  # noqa: E402
 
@@ -46,9 +46,11 @@ ROLE_CODES = {
 }
 
 MATCH_STATUSES = {"betting_open", "in_progress", "completed", "settled"}
-PROTECTED_GET_PATHS = {"/api/admin/audit", "/api/admin/status", "/api/ledger", "/api/settings", "/api/wallets"}
+PROTECTED_GET_PATHS = {"/api/admin/audit", "/api/admin/status", "/api/commands/custom", "/api/ledger", "/api/settings", "/api/wallets"}
 PROTECTED_POST_PATHS = {
     "/api/command",
+    "/api/commands/custom",
+    "/api/commands/custom/delete",
     "/api/draft/start",
     "/api/draft/action",
     "/api/draft/undo",
@@ -218,6 +220,11 @@ class Handler(BaseHTTPRequestHandler):
                     return
                 guild_id = _first(query, "guild_id") or settings_utils.DEFAULT_GUILD_ID
                 self._send_json({"ok": True, "settings": settings_utils.get_guild_settings(guild_id)})
+            elif parsed.path == "/api/commands/custom":
+                if not self._require_auth():
+                    return
+                guild_id = _first(query, "guild_id") or custom_command_utils.DEFAULT_GUILD_ID
+                self._send_json({"ok": True, "commands": custom_command_utils.load_commands(guild_id)})
             elif parsed.path.startswith("/api/"):
                 self._send_error(404, "Not found")
             else:
@@ -238,6 +245,17 @@ class Handler(BaseHTTPRequestHandler):
                 return
             elif parsed.path == "/api/command":
                 self._send_json({"ok": True, "result": _execute_intent(body.get("message", ""))})
+            elif parsed.path == "/api/commands/custom":
+                guild_id = str(body.get("guild_id") or custom_command_utils.DEFAULT_GUILD_ID)
+                command = custom_command_utils.upsert_command(guild_id, body)
+                _record_audit("commands.upsert", command["trigger"], metadata={"guild_id": guild_id})
+                self._send_json({"ok": True, "command": command, "commands": custom_command_utils.load_commands(guild_id)})
+            elif parsed.path == "/api/commands/custom/delete":
+                guild_id = str(body.get("guild_id") or custom_command_utils.DEFAULT_GUILD_ID)
+                trigger = _required_str(body, "trigger")
+                deleted = custom_command_utils.delete_command(guild_id, trigger)
+                _record_audit("commands.delete", trigger, metadata={"guild_id": guild_id, "deleted": deleted})
+                self._send_json({"ok": True, "deleted": deleted, "commands": custom_command_utils.load_commands(guild_id)})
             elif parsed.path == "/api/draft/start":
                 draft = DraftState(
                     blue_captain_id=1,

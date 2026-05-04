@@ -18,6 +18,7 @@ DEFAULT_GUILD_ID = "global"
 FEATURE_KEYS = ("botEnabled", "randomizerEnabled", "draftsEnabled", "bettingEnabled")
 CHANNEL_KEYS = ("matchChannel", "bettingChannel", "adminChannel")
 ROLE_KEYS = ("adminRole", "captainRole")
+PERMISSION_KEYS = ("monetizeAccess",)
 TEXT_FIELDS = CHANNEL_KEYS + ROLE_KEYS
 
 
@@ -38,6 +39,9 @@ def default_settings(guild_id: str = DEFAULT_GUILD_ID) -> dict:
         "roles": {
             "adminRole": "",
             "captainRole": "",
+        },
+        "permissions": {
+            "monetizeAccess": "none",
         },
         "updated_at": None,
         "updated_by": None,
@@ -69,6 +73,7 @@ def get_guild_settings(guild_id: str = DEFAULT_GUILD_ID) -> dict:
     settings["features"].update(_dict(saved.get("features")))
     settings["channels"].update(_dict(saved.get("channels")))
     settings["roles"].update(_dict(saved.get("roles")))
+    settings["permissions"].update(_dict(saved.get("permissions")))
     settings["updated_at"] = saved.get("updated_at")
     settings["updated_by"] = saved.get("updated_by")
     return settings
@@ -89,6 +94,14 @@ def update_guild_settings(guild_id: str, payload: dict, updated_by: str | None =
     for key in ROLE_KEYS:
         if key in _dict(payload.get("roles")):
             current["roles"][key] = _clean_label(payload["roles"][key], key)
+
+    for key in PERMISSION_KEYS:
+        if key in _dict(payload.get("permissions")):
+            current["permissions"][key] = _clean_choice(
+                payload["permissions"][key],
+                {"none", "read", "manage"},
+                key,
+            )
 
     current["updated_at"] = int(time.time())
     current["updated_by"] = _clean_label(updated_by or payload.get("updated_by") or "web-admin", "updated_by")
@@ -117,3 +130,10 @@ def _clean_label(value, field_name: str) -> str:
     if any(ord(char) < 32 for char in label):
         raise ValueError(f"{field_name} cannot contain control characters")
     return label
+
+
+def _clean_choice(value, choices: set[str], field_name: str) -> str:
+    choice = str(value or "").strip().lower()
+    if choice not in choices:
+        raise ValueError(f"Invalid {field_name}")
+    return choice

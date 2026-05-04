@@ -115,20 +115,68 @@
           <div class="dashboard-shell">
             <aside class="dashboard-sidebar" aria-label="Dashboard modules">
               <div class="server-card">
-                <span class="server-avatar">S2</span>
+                <span class="server-avatar" id="selected-server-avatar">S2</span>
                 <div>
-                  <strong>Smite Night Arena</strong>
-                  <small>Demo server</small>
+                  <strong id="selected-server-name">Smite Night Arena</strong>
+                  <small id="selected-server-meta">Demo server</small>
                 </div>
               </div>
-              <button class="module-tab is-active" data-dashboard-tab="overview">Overview</button>
-              <button class="module-tab" data-dashboard-tab="commands">Command Config</button>
-              <button class="module-tab" data-dashboard-tab="randomizer">Randomizer</button>
-              <button class="module-tab" data-dashboard-tab="builds">Builds</button>
-              <button class="module-tab" data-dashboard-tab="drafts">Drafts</button>
-              <button class="module-tab" data-dashboard-tab="match">Match Ops</button>
-              <button class="module-tab" data-dashboard-tab="betting">Betting</button>
-              <button class="module-tab" data-dashboard-tab="settings">Settings</button>
+              <div class="sidebar-section">
+                <div class="sidebar-section-title">
+                  <span>Essentials</span>
+                  <small>Core</small>
+                </div>
+                <button class="module-tab is-active" data-dashboard-tab="overview">
+                  <span class="module-dot module-dot--live"></span>
+                  <span>Overview</span>
+                </button>
+                <button class="module-tab" data-dashboard-tab="commands">
+                  <span class="module-dot module-dot--staged"></span>
+                  <span>Command Config</span>
+                </button>
+              </div>
+              <div class="sidebar-section">
+                <div class="sidebar-section-title">
+                  <span>Smite Tools</span>
+                  <small>Public</small>
+                </div>
+                <button class="module-tab" data-dashboard-tab="randomizer">
+                  <span class="module-dot module-dot--live"></span>
+                  <span>Randomizer</span>
+                </button>
+                <button class="module-tab" data-dashboard-tab="builds">
+                  <span class="module-dot module-dot--live"></span>
+                  <span>Builds</span>
+                </button>
+                <button class="module-tab" data-dashboard-tab="drafts">
+                  <span class="module-dot module-dot--staged"></span>
+                  <span>Drafts</span>
+                </button>
+              </div>
+              <div class="sidebar-section">
+                <div class="sidebar-section-title">
+                  <span>Match Night</span>
+                  <small>Admin</small>
+                </div>
+                <button class="module-tab" data-dashboard-tab="match">
+                  <span class="module-dot module-dot--live"></span>
+                  <span>Match Ops</span>
+                </button>
+                <button class="module-tab" data-dashboard-tab="betting">
+                  <span class="module-dot module-dot--live"></span>
+                  <span>Betting</span>
+                </button>
+              </div>
+              <div class="sidebar-section">
+                <div class="sidebar-section-title">
+                  <span>Server Management</span>
+                  <small>Setup</small>
+                </div>
+                <button class="module-tab" data-dashboard-tab="settings">
+                  <span class="module-dot module-dot--staged"></span>
+                  <span>Settings</span>
+                </button>
+              </div>
             </aside>
 
             <div class="dashboard-main">
@@ -193,6 +241,17 @@
                   <div class="ops-stat-grid" id="admin-status-summary" aria-live="polite">
                     <p class="empty-state">Admin login required.</p>
                   </div>
+                  <div class="server-selector-panel">
+                    <div class="panel-heading-row">
+                      <div>
+                        <p class="eyebrow compact">Servers</p>
+                        <h4>Select a server</h4>
+                      </div>
+                    </div>
+                    <div class="server-grid" id="admin-server-grid" aria-live="polite">
+                      <p class="empty-state">Admin login required.</p>
+                    </div>
+                  </div>
                   <div class="guild-strip">
                     <span class="guild-strip-label">Managed servers</span>
                     <div id="admin-guild-list">
@@ -238,7 +297,7 @@
 
               <div class="dashboard-panel" data-dashboard-panel="commands" data-admin-panel>
                 <div class="builder-layout">
-                  <form class="builder-form" aria-label="Command configuration demo">
+                  <form class="builder-form" id="command-config-form" aria-label="Command configuration demo">
                     <label>
                       Trigger
                       <input id="command-trigger" value=".scrimrules" />
@@ -275,6 +334,7 @@
                         <input id="command-cooldown" value="15s" />
                       </label>
                     </div>
+                    <button class="button button-primary" type="submit">Save Command Config</button>
                   </form>
 
                   <div class="discord-preview">
@@ -292,7 +352,17 @@
                         </div>
                       </div>
                     </div>
-                    <p class="demo-note">Demo only: no command is saved or registered with Discord.</p>
+                    <p class="demo-note">Saved locally only. Bot-side execution requires the future custom command resolver and guild permissions.</p>
+                    <div class="panel-heading-row command-list-heading">
+                      <div>
+                        <p class="eyebrow compact">Saved configs</p>
+                        <h4>Custom command staging</h4>
+                      </div>
+                      <button class="button button-secondary" id="command-list-refresh" type="button">Refresh</button>
+                    </div>
+                    <div class="custom-command-list" id="custom-command-list" aria-live="polite">
+                      <p class="empty-state">Admin login required.</p>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -722,8 +792,57 @@
                     <p class="demo-note" id="settings-meta">No saved settings yet.</p>
                   </article>
                   <article class="settings-card">
+                    <p class="eyebrow compact">Bot masters</p>
+                    <h4>Permission staging</h4>
+                    <div class="settings-warning">
+                      Bot masters can manage dashboard modules in this temporary surface. Real Discord role verification still requires OAuth and guild permission checks.
+                    </div>
+                    <label class="settings-label">Configured role labels</label>
+                    <div class="role-chip-row" id="bot-master-role-chips">
+                      <span>No role labels configured yet</span>
+                    </div>
+                    <div class="permission-radio-group">
+                      <p>Premium/monetization surface</p>
+                      <label>
+                        <input type="radio" name="setting-monetize-access" value="none" checked />
+                        <span>No access</span>
+                        <small>Bot masters cannot see monetization controls.</small>
+                      </label>
+                      <label>
+                        <input type="radio" name="setting-monetize-access" value="read" />
+                        <span>Read-only access</span>
+                        <small>Bot masters can view data but cannot take actions.</small>
+                      </label>
+                      <label>
+                        <input type="radio" name="setting-monetize-access" value="manage" />
+                        <span>Management access</span>
+                        <small>Bot masters can manage future premium/server economy actions.</small>
+                      </label>
+                    </div>
                     <h4>Production gates</h4>
                     <p>These settings persist to local JSON for the Railway milestone. Discord OAuth, real guild selection, RBAC, audit logs, and database-backed settings remain staged work.</p>
+                    <div class="readiness-list">
+                      <div>
+                        <span class="module-dot module-dot--live"></span>
+                        <strong>Temporary admin password</strong>
+                        <small>Configured through host variables.</small>
+                      </div>
+                      <div>
+                        <span class="module-dot module-dot--staged"></span>
+                        <strong>Discord OAuth</strong>
+                        <small>Needs app setup, callback URL, and scopes.</small>
+                      </div>
+                      <div>
+                        <span class="module-dot module-dot--staged"></span>
+                        <strong>Guild permissions</strong>
+                        <small>Needs manage/admin checks per selected guild.</small>
+                      </div>
+                      <div>
+                        <span class="module-dot module-dot--staged"></span>
+                        <strong>Database storage</strong>
+                        <small>Needed before true multi-guild production.</small>
+                      </div>
+                    </div>
                     <h4>Asset slots</h4>
                     <p>Prepared names: god-card, item-card, role-icon, dashboard-hero, background-texture.</p>
                   </article>

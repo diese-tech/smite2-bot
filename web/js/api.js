@@ -222,6 +222,24 @@ export async function runCommand(message) {
   });
 }
 
+export async function getCustomCommands(guild_id = "global") {
+  return fetchJson(`/api/commands/custom?guild_id=${encodeURIComponent(guild_id)}`);
+}
+
+export async function saveCustomCommand(payload) {
+  return fetchJson("/api/commands/custom", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function deleteCustomCommand(guild_id, trigger) {
+  return fetchJson("/api/commands/custom/delete", {
+    method: "POST",
+    body: JSON.stringify({ guild_id, trigger }),
+  });
+}
+
 export async function startDraft(payload) {
   return fetchJson("/api/draft/start", {
     method: "POST",

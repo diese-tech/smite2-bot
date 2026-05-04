@@ -74,6 +74,15 @@ def tmp_settings(tmp_path, monkeypatch):
     return settings_file
 
 
+@pytest.fixture()
+def tmp_custom_commands(tmp_path, monkeypatch):
+    """Redirect custom command config I/O to a fresh tmp file for each test."""
+    import utils.custom_commands as commands_mod
+    commands_file = tmp_path / "custom_commands.json"
+    monkeypatch.setattr(commands_mod, "COMMANDS_PATH", commands_file)
+    return commands_file
+
+
 @pytest.fixture(autouse=True)
 def tmp_audit(tmp_path, monkeypatch):
     """Redirect admin audit I/O to a fresh tmp file for each test."""
