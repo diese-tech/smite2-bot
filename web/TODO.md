@@ -109,6 +109,7 @@ Version note: the ledger system is the v2.0 milestone. Substantial dashboard bri
 ## Testing Before Real Admin Features
 
 - Add unit tests for any future API wrapper around bot logic.
-- Add UI tests for dashboard tab switching, command preview, randomizer controls, and responsive layouts.
+- Static dashboard tab/panel coverage exists via `npm run test:dashboard`.
+- Add deeper UI tests for command preview, randomizer controls, and responsive layouts.
 - Add authorization tests for Discord guild permissions before settings can be changed.
 - Add bot integration tests for custom command execution and built-in command precedence.

@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "node server.mjs",
     "build": "node -e \"console.log('Static site: no build step required. Files in web/ are production-ready.')\"",
-    "test:security": "node js/security.test.mjs"
+    "test:security": "node js/security.test.mjs",
+    "test:dashboard": "node js/dashboard-static.test.mjs"
   }
 }

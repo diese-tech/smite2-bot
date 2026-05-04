@@ -75,6 +75,12 @@ Security helper coverage for dashboard HTML escaping:
 npm run test:security
 ```
 
+Static dashboard coverage for tab/panel wiring and required admin surfaces:
+
+```powershell
+npm run test:dashboard
+```
+
 ## Edit Points
 
 - Replace the placeholder `Add to Discord` links in `index.html` with the bot's Discord OAuth invite URL.
