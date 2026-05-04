@@ -147,6 +147,41 @@ def test_admin_status_reports_data_counts_and_requires_auth(monkeypatch, tmp_led
         assert payload["status"]["data"]["walletCount"] == 1
         assert payload["status"]["data"]["statusCounts"]["betting_open"] == 1
         assert payload["status"]["bot"]["guildCount"] >= 0
+        modules = {module["key"]: module for module in payload["status"]["modules"]}
+        assert modules["randomizer"]["state"] == "ready"
+        assert modules["betting-wallets"]["state"] == "needs_setup"
+        assert "Discord ledger embed" in modules["betting-wallets"]["needs"]
+    finally:
+        _stop_server(httpd)
+
+
+def test_admin_status_module_health_reflects_saved_settings(monkeypatch, tmp_ledger, tmp_wallets, tmp_settings):
+    monkeypatch.setenv("GODFORGE_ADMIN_PASSWORD", "secret-test")
+    ledger_utils.update_embed_info(12345, 67890)
+    httpd, base = _start_server()
+    try:
+        cookie = _login(base)
+        status, _, _ = _request(
+            "POST",
+            f"{base}/api/settings",
+            {
+                "guild_id": "global",
+                "features": {"draftsEnabled": False, "bettingEnabled": True},
+                "channels": {"matchChannel": "#matches", "bettingChannel": "#bets", "adminChannel": "#admin"},
+                "roles": {"adminRole": "Admins", "captainRole": "Captains"},
+            },
+            cookie,
+        )
+        assert status == 200
+
+        status, payload, _ = _request("GET", f"{base}/api/admin/status", cookie=cookie)
+        modules = {module["key"]: module for module in payload["status"]["modules"]}
+
+        assert status == 200
+        assert modules["match-ops"]["state"] == "ready"
+        assert modules["betting-wallets"]["state"] == "ready"
+        assert modules["drafts"]["enabled"] is False
+        assert modules["settings"]["state"] == "ready"
     finally:
         _stop_server(httpd)
 

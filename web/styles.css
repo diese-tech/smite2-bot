@@ -878,8 +878,60 @@ h1 {
   font-weight: 800;
 }
 
+.module-health,
 .audit-feed {
   margin-top: 16px;
+}
+
+.module-health-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.module-health-card {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.module-health-card > div:first-child {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.module-health-card strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.module-health-card p {
+  margin-bottom: 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.module-needs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.module-needs span {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 7px;
+  padding: 5px 7px;
+  color: var(--soft);
+  font-size: 12px;
+  font-weight: 800;
 }
 
 #admin-audit-list {
@@ -1650,6 +1702,30 @@ textarea:focus {
   color: var(--muted);
 }
 
+.status-badge--ready {
+  border: 1px solid rgba(84, 210, 143, 0.32);
+  background: rgba(84, 210, 143, 0.12);
+  color: #9ef0bf;
+}
+
+.status-badge--needs_setup {
+  border: 1px solid rgba(240, 189, 77, 0.34);
+  background: rgba(240, 189, 77, 0.13);
+  color: var(--gold-2);
+}
+
+.status-badge--staged {
+  border: 1px solid rgba(88, 101, 242, 0.34);
+  background: rgba(88, 101, 242, 0.13);
+  color: #b9c0ff;
+}
+
+.status-badge--disabled {
+  border: 1px solid rgba(174, 183, 203, 0.24);
+  background: rgba(174, 183, 203, 0.09);
+  color: var(--muted);
+}
+
 .bet-row {
   grid-template-columns: minmax(120px, 0.9fr) minmax(80px, 0.5fr) minmax(180px, 1fr) minmax(90px, 0.5fr) auto;
 }
@@ -1958,6 +2034,7 @@ textarea:focus {
 
   .metric-row,
   .ops-stat-grid,
+  .module-health-grid,
   .portal-grid,
   .card-grid,
     .draft-console,
@@ -2028,6 +2105,7 @@ textarea:focus {
 
   .metric-row,
   .ops-stat-grid,
+  .module-health-grid,
   .portal-grid,
   .card-grid,
   .draft-console,

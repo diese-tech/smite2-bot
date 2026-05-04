@@ -613,6 +613,7 @@ def _schedule_ledger_embed_refresh() -> bool:
 def _admin_status() -> dict:
     ledger = ledger_utils.load_ledger()
     wallets = wallet_utils.load_wallets()
+    settings = settings_utils.get_guild_settings(settings_utils.DEFAULT_GUILD_ID)
     status_counts = {status: 0 for status in sorted(MATCH_STATUSES)}
 
     for match in ledger.get("matches", []):
@@ -629,9 +630,73 @@ def _admin_status() -> dict:
             "statusCounts": status_counts,
             "embedConfigured": bool(ledger.get("embed_message_id") and ledger.get("embed_channel_id")),
         },
+        "modules": _module_health(settings, ledger, wallets),
         "draftRooms": len(draft_rooms),
         "checkedAt": int(time.time()),
     }
+
+
+def _module_health(settings: dict, ledger: dict, wallets: dict) -> list[dict]:
+    features = settings.get("features", {})
+    channels = settings.get("channels", {})
+    roles = settings.get("roles", {})
+    has_admin_role = bool(roles.get("adminRole"))
+    has_captain_role = bool(roles.get("captainRole"))
+    has_match_channel = bool(channels.get("matchChannel"))
+    has_betting_channel = bool(channels.get("bettingChannel"))
+    has_admin_channel = bool(channels.get("adminChannel"))
+    has_embed = bool(ledger.get("embed_message_id") and ledger.get("embed_channel_id"))
+
+    return [
+        {
+            "key": "command-config",
+            "label": "Command Config",
+            "state": "staged",
+            "enabled": bool(features.get("botEnabled", True)),
+            "detail": "UI preview only until custom command persistence lands.",
+            "needs": ["Database storage", "Bot-side custom command resolver"],
+        },
+        {
+            "key": "randomizer",
+            "label": "Randomizer",
+            "state": "ready" if features.get("randomizerEnabled", True) else "disabled",
+            "enabled": bool(features.get("randomizerEnabled", True)),
+            "detail": "Public web rolls and bot roll logic share local god data.",
+            "needs": [],
+        },
+        {
+            "key": "drafts",
+            "label": "Drafts",
+            "state": "ready" if features.get("draftsEnabled", True) and has_captain_role else "needs_setup",
+            "enabled": bool(features.get("draftsEnabled", True)),
+            "detail": "Web draft rooms are live but still process-local.",
+            "needs": [] if has_captain_role else ["Captain role label"],
+        },
+        {
+            "key": "match-ops",
+            "label": "Match Ops",
+            "state": "ready" if has_match_channel else "needs_setup",
+            "enabled": True,
+            "detail": f"{len(ledger.get('matches', []))} matches in the current ledger.",
+            "needs": [] if has_match_channel else ["Match channel label"],
+        },
+        {
+            "key": "betting-wallets",
+            "label": "Betting and Wallets",
+            "state": "ready" if features.get("bettingEnabled", True) and has_betting_channel and has_embed else "needs_setup",
+            "enabled": bool(features.get("bettingEnabled", True)),
+            "detail": f"{len(wallets)} wallets tracked. Discord embed {'linked' if has_embed else 'not linked'}.",
+            "needs": [need for need, missing in (("Betting channel label", not has_betting_channel), ("Discord ledger embed", not has_embed)) if missing],
+        },
+        {
+            "key": "settings",
+            "label": "Settings",
+            "state": "ready" if has_admin_role and has_admin_channel else "needs_setup",
+            "enabled": True,
+            "detail": "Temporary JSON settings are active for the live milestone.",
+            "needs": [need for need, missing in (("Admin role label", not has_admin_role), ("Admin channel label", not has_admin_channel)) if missing],
+        },
+    ]
 
 
 def _record_audit(action: str, target: str = "", metadata: dict | None = None):

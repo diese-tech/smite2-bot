@@ -172,8 +172,18 @@ type AdminStatus = {
     statusCounts: Record<MatchStatus | string, number>;
     embedConfigured: boolean;
   };
+  modules: ModuleHealth[];
   draftRooms: number;
   checkedAt: number;
+};
+
+type ModuleHealth = {
+  key: string;
+  label: string;
+  state: "ready" | "needs_setup" | "staged" | "disabled";
+  enabled: boolean;
+  detail: string;
+  needs: string[];
 };
 ```
 

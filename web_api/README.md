@@ -66,7 +66,7 @@ GET /api/admin/status
 POST /api/admin/sync/ledger
 ```
 
-`GET /api/admin/status` reports bot connection state, Discord user, guild count, recent guild names, ledger counts, wallet count, embed pointer state, active web draft rooms, and a check timestamp.
+`GET /api/admin/status` reports bot connection state, Discord user, guild count, recent guild names, ledger counts, wallet count, embed pointer state, module health, active web draft rooms, and a check timestamp.
 
 `POST /api/admin/sync/ledger` asks the running bot loop to refresh the Discord betting embed when the API and bot are running in the combined Railway process.
 

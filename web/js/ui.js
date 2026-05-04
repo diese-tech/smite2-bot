@@ -60,9 +60,10 @@ function setApiStatus(online) {
 async function loadAdminStatus() {
   const summary = $("#admin-status-summary");
   const guildList = $("#admin-guild-list");
+  const moduleGrid = $("#module-health-grid");
   const syncState = $("#admin-sync-state");
 
-  if (!summary && !guildList && !syncState) {
+  if (!summary && !guildList && !moduleGrid && !syncState) {
     return;
   }
 
@@ -105,6 +106,10 @@ async function loadAdminStatus() {
         : `<span>No guilds reported yet.</span>`;
     }
 
+    if (moduleGrid) {
+      moduleGrid.innerHTML = renderModuleHealth(status.modules || []);
+    }
+
     if (syncState) {
       syncState.textContent = `Open ${statusCounts.betting_open || 0} / live ${statusCounts.in_progress || 0} / completed ${statusCounts.completed || 0} / settled ${statusCounts.settled || 0}`;
     }
@@ -115,10 +120,44 @@ async function loadAdminStatus() {
     if (guildList) {
       guildList.innerHTML = `<span>Login required</span>`;
     }
+    if (moduleGrid) {
+      moduleGrid.innerHTML = `<p class="empty-state">${error.status === 401 ? "Admin login required." : "Module health unavailable."}</p>`;
+    }
     if (syncState) {
       syncState.textContent = "Locked";
     }
   }
+}
+
+function renderModuleHealth(modules) {
+  if (!modules.length) {
+    return `<p class="empty-state">No modules reported yet.</p>`;
+  }
+
+  const stateLabels = {
+    ready: "Ready",
+    needs_setup: "Needs setup",
+    staged: "Staged",
+    disabled: "Disabled",
+  };
+
+  return modules.map((module) => {
+    const needs = module.needs?.length
+      ? module.needs.map((need) => `<span>${escapeHtml(need)}</span>`).join("")
+      : `<span>All required setup present</span>`;
+    const state = module.state || "staged";
+
+    return `
+      <article class="module-health-card module-health-card--${escapeHtml(state)}">
+        <div>
+          <strong>${escapeHtml(module.label)}</strong>
+          <span class="status-badge status-badge--${escapeHtml(state)}">${escapeHtml(stateLabels[state] || state)}</span>
+        </div>
+        <p>${escapeHtml(module.detail || "")}</p>
+        <div class="module-needs">${needs}</div>
+      </article>
+    `;
+  }).join("");
 }
 
 async function loadAdminAudit() {
