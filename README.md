@@ -256,7 +256,14 @@ God portraits are pulled from SmiteFire's CDN (`smitefire.com/images/v2/god/icon
 
 Version bumps happen when user-facing behavior changes — new commands, changed command behavior, or new features. Internal changes (hardening, data edits, README updates, bug fixes) do not bump the version.
 
-The current version is displayed in the `.help` command footer. Update the version string in `utils/formatter.py` inside `format_help()` when shipping a new feature.
+The current version is displayed at the bottom of the `.help` command embeds. Update `GODFORGE_VERSION` in `utils/formatter.py` when shipping a new feature.
+
+Release notes and release gates live in:
+
+- `VERSION_HISTORY.md`
+- `RELEASE_PROCESS.md`
+- `web/README.md`
+- `web_api/README.md`
 
 | Version | Changes |
 |---------|---------|
@@ -268,3 +275,4 @@ The current version is displayed in the `.help` command footer. Update the versi
 | 1.5 | Sessions — reaction-based picks, god exclusion tracking |
 | 1.6 | Fearless draft system, god name resolver with aliases |
 | 2.0 | Match betting system — `.match`, `.bet`, `.wallet`, `.ledger`; persistent paginated ledger embed; Activity backend draft integration with local fallback |
+| 2.1.0-rc | Release candidate for live dashboard bridge — Discord OAuth staging, SQLite dashboard storage, MEE6-style admin surface |

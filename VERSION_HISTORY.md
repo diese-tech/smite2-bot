@@ -2,6 +2,15 @@
 
 This file tracks product-level milestones so dashboard and bot work does not blur together across releases.
 
+When a release changes, update:
+
+- `utils/formatter.py` (`GODFORGE_VERSION`, shown at the bottom of `.help`)
+- `VERSION_HISTORY.md`
+- `RELEASE_PROCESS.md`
+- `README.md`
+- `web/README.md`
+- `web_api/README.md`
+
 ## v2.0 - Ledger System
 
 The ledger and wallet system brought GodForge to v2.0.

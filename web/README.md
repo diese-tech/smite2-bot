@@ -8,6 +8,8 @@ The dashboard, custom-command builder, Discord connection controls, and portal c
 
 Product-level release milestones are tracked in `../VERSION_HISTORY.md`. The ledger system is v2.0; dashboard bridge work is staged as v2.1.0 candidate work, to be tagged after OAuth and DB-backed dashboard basics are working.
 
+Release process details live in `../RELEASE_PROCESS.md`. The bot-visible version is controlled by `GODFORGE_VERSION` in `../utils/formatter.py` and appears at the bottom of `.help`.
+
 The optional local API in `../web_api` exposes a development-only bridge to the existing Godforge parser, loader, picker, draft, ledger, and wallet modules. When that API is not running, the website stays previewable with demo fallback data for god rolls, Roll Team, builds, matches, bets, and wallets.
 
 ## Preview Locally

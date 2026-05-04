@@ -4,6 +4,8 @@ This file tracks work intentionally skipped in the static prototype.
 
 Version note: the ledger system is the v2.0 milestone. Dashboard bridge work is staged for `v2.1.0`, to be tagged after OAuth and DB-backed dashboard basics are working.
 
+Release/version update locations are documented in `../RELEASE_PROCESS.md`. The `.help` footer version comes from `../utils/formatter.py`.
+
 ## Completed in the Local Prototype
 
 - Added a dashboard-style admin portal surface with module navigation.

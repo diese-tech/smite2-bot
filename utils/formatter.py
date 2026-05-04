@@ -10,6 +10,9 @@ import re
 import discord
 
 
+GODFORGE_VERSION = "2.1.0-rc"
+RELEASE_NOTES = "Release notes: VERSION_HISTORY.md"
+
 # Buff-themed role colors (Smite 2 has no green buff; support takes green).
 ROLE_COLORS = {
     "jungle": 0xF1C40F,   # yellow
@@ -259,7 +262,7 @@ def format_help_page1() -> discord.Embed:
         "_Aliases work: `.ban mlf`, `.pick baron`_"
     ), inline=False)
 
-    embed.set_footer(text="Page 1/2 — GodForge v2.0 • use ➡️ for betting commands")
+    embed.set_footer(text=f"Page 1/2 — GodForge v{GODFORGE_VERSION} • use ➡️ for betting commands • {RELEASE_NOTES}")
     return embed
 
 
@@ -294,7 +297,7 @@ def format_help_page2() -> discord.Embed:
         "_#betting-ledger has a live paginated embed — use ⬅️ ➡️ to browse._"
     ), inline=False)
 
-    embed.set_footer(text="Page 2/2 — GodForge v2.0 • use ⬅️ for main commands")
+    embed.set_footer(text=f"Page 2/2 — GodForge v{GODFORGE_VERSION} • use ⬅️ for main commands • {RELEASE_NOTES}")
     return embed
 
 
