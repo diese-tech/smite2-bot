@@ -871,6 +871,11 @@ textarea {
   outline: none;
 }
 
+select option {
+  background: #f8f4ea;
+  color: #10131d;
+}
+
 textarea {
   min-height: 132px;
   resize: vertical;
