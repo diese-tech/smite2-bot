@@ -77,19 +77,6 @@ async def test_match_draft_happy_path(tmp_ledger, open_match, mock_notify_channe
     assert "in progress" in reply
 
 
-async def test_match_draft_wrong_channel(tmp_ledger, open_match, mock_notify_channel):
-    """.match draft outside a handshake channel is rejected."""
-    match_id = open_match["match_id"]
-    msg = _admin_message(
-        f".match draft {match_id}", mock_notify_channel,
-        channel_name="general",
-    )
-
-    await bot._match_draft(msg)
-
-    reply = mock_notify_channel.send.call_args[0][0].lower()
-    assert "handshake" in reply
-    assert ledger_utils.get_match(match_id)["status"] == "betting_open"  # unchanged
 
 
 async def test_match_draft_nonexistent_match(tmp_ledger, mock_notify_channel):

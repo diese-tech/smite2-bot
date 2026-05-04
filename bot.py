@@ -1095,11 +1095,17 @@ def _build_ledger_embed(data: dict, page: int) -> discord.Embed:
 
 
 async def _handle_wallet_command(message: discord.Message):
+    parts = message.content.split()
+    sub = parts[1].lower() if len(parts) > 1 else ""
+
+    if sub == "check":
+        target = message.mentions[0] if message.mentions else message.author
+        await _wallet_check(message, target)
+        return
+
     if not _is_admin(message):
         await message.channel.send("⚠️ This command requires admin permissions.")
         return
-    parts = message.content.split()
-    sub = parts[1].lower() if len(parts) > 1 else ""
 
     if sub == "wipe":
         await _wallet_wipe(message)
@@ -1114,15 +1120,10 @@ async def _handle_wallet_command(message: discord.Message):
             await message.channel.send(f"⚠️ Invalid amount `{parts[-1]}`.")
             return
         await _wallet_adjust(message, sub, target, amount)
-    elif sub == "check":
-        if not message.mentions:
-            await message.channel.send("⚠️ Usage: `.wallet check @player`")
-            return
-        await _wallet_check(message, message.mentions[0])
     else:
         await message.channel.send(
-            "⚠️ Usage: `.wallet give|take|set @player amount`  or  "
-            "`.wallet check @player`  or  `.wallet wipe`"
+            "⚠️ Usage: `.wallet check [@player]`  or  "
+            "`.wallet give|take|set @player amount`  or  `.wallet wipe`"
         )
 
 
@@ -1235,15 +1236,6 @@ async def _match_draft(message: discord.Message):
         await message.channel.send("⚠️ Usage: `.match draft GF-XXXX`")
         return
     match_id = parts[2].upper()
-
-    channel_name = getattr(message.channel, "name", "")
-    in_draft_channel = (
-        MATCH_DRAFT_CHANNEL_ID and message.channel.id == MATCH_DRAFT_CHANNEL_ID
-        or not MATCH_DRAFT_CHANNEL_ID and "handshake" in channel_name.lower()
-    )
-    if not in_draft_channel:
-        await message.channel.send("⚠️ `.match draft` must be run in the team handshake channel.")
-        return
 
     match = ledger_utils.get_match(match_id)
     if not match:
