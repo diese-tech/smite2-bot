@@ -194,10 +194,16 @@ The `#betting-ledger` channel displays a persistent paginated embed showing each
    | `PLACE_BETS_CHANNEL_ID` | Yes | Channel ID for `#place-bets` |
    | `ACTIVITY_BACKEND_URL` | No | URL of the Activity draft backend — omit to use local draft mode |
    | `ACTIVITY_API_KEY` | No | API key for the Activity backend |
+   | `GODFORGE_ADMIN_PASSWORD` | Web dashboard only | Temporary password gate for protected dashboard actions |
 
 4. **Run:**
    ```
    python bot.py
+   ```
+
+   To run the combined bot + dashboard service locally or on Railway after deployment approval:
+   ```
+   python railway_app.py
    ```
 
 ## File layout

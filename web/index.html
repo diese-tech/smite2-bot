@@ -1,0 +1,815 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Godforge is a Smite 2 Discord bot and admin portal concept for random god picks, builds, draft tools, custom commands, and match-night operations."
+    />
+    <title>Godforge | Smite 2 Discord Bot and Admin Portal</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;800;900&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="site-shell">
+      <header class="nav">
+        <a class="brand" href="#top" aria-label="Godforge home">
+          <span class="brand-mark">GF</span>
+          <span>Godforge</span>
+        </a>
+        <nav class="nav-links" aria-label="Primary navigation">
+          <a href="#dashboard">Dashboard</a>
+          <a href="#web-tools">Web Tools</a>
+          <a href="#features">Features</a>
+          <a href="#commands">Commands</a>
+          <a href="#roadmap">Roadmap</a>
+        </nav>
+        <a class="nav-cta" href="#dashboard">Preview Dashboard</a>
+      </header>
+
+      <main id="top">
+        <section class="hero section-wrap">
+          <div class="hero-bg" aria-hidden="true">
+            <div class="hero-grid"></div>
+            <div class="hero-beam hero-beam-one"></div>
+            <div class="hero-beam hero-beam-two"></div>
+          </div>
+
+          <div class="hero-copy">
+            <p class="eyebrow">Smite 2 command center</p>
+            <h1>Run the server. Roll the gods. Forge the match night.</h1>
+            <p class="hero-subhead">
+              Godforge is evolving from a Discord bot into a dual-surface Smite 2 utility:
+              bot commands for live channels, plus a polished admin portal for server tools,
+              command config, randomizers, and match ops.
+            </p>
+            <div class="hero-actions" id="cta">
+              <a class="button button-primary" href="#dashboard">Preview Dashboard</a>
+              <a class="button button-secondary" href="#" data-demo-action="connect">Connect Discord</a>
+            </div>
+            <div class="trust-row" aria-label="Project highlights">
+              <span>Bot live today</span>
+              <span>Admin portal concept</span>
+              <span>Static prototype only</span>
+            </div>
+          </div>
+
+          <div class="hero-visual">
+            <div class="command-center-card">
+              <div class="panel-toolbar">
+                <span class="toolbar-dot"></span>
+                <span class="toolbar-dot"></span>
+                <span class="toolbar-dot"></span>
+                <span class="panel-title">Server console</span>
+              </div>
+              <div class="live-strip">
+                <span class="status-dot"></span>
+                <strong>Smite Night Arena</strong>
+                <em>Godforge connected</em>
+              </div>
+              <div class="artifact-grid">
+                <div class="artifact-card asset-slot" data-asset-slot="dashboard-hero">
+                  <span>Dashboard hero art slot</span>
+                </div>
+                <div class="artifact-card">
+                  <p class="artifact-label">Command preview</p>
+                  <code>.scrimrules</code>
+                  <p>Posts custom server rules, captains, lobby code, and draft reminder.</p>
+                </div>
+              </div>
+              <div class="mini-ledger">
+                <div>
+                  <span>GF-0007</span>
+                  <strong>Solaris vs Onyx</strong>
+                </div>
+                <span class="pill live">Betting open</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="value section-wrap">
+          <div class="section-heading">
+            <p class="eyebrow">Product direction</p>
+            <h2>Discord-first, with a web surface for the things admins want to configure.</h2>
+          </div>
+          <p>
+            The bot stays the live match-night operator. The website becomes the place to
+            preview and eventually manage command config, Smite tools, server defaults,
+            draft presets, betting rules, and owned production graphics.
+          </p>
+        </section>
+
+        <section class="dashboard section-wrap" id="dashboard">
+          <div class="section-heading">
+            <p class="eyebrow">Admin portal preview</p>
+            <h2>A dashboard concept for server owners.</h2>
+          </div>
+
+          <div class="dashboard-shell">
+            <aside class="dashboard-sidebar" aria-label="Dashboard modules">
+              <div class="server-card">
+                <span class="server-avatar">S2</span>
+                <div>
+                  <strong>Smite Night Arena</strong>
+                  <small>Demo server</small>
+                </div>
+              </div>
+              <button class="module-tab is-active" data-dashboard-tab="overview">Overview</button>
+              <button class="module-tab" data-dashboard-tab="commands">Command Config</button>
+              <button class="module-tab" data-dashboard-tab="randomizer">Randomizer</button>
+              <button class="module-tab" data-dashboard-tab="builds">Builds</button>
+              <button class="module-tab" data-dashboard-tab="drafts">Drafts</button>
+              <button class="module-tab" data-dashboard-tab="match">Match Ops</button>
+              <button class="module-tab" data-dashboard-tab="betting">Betting</button>
+              <button class="module-tab" data-dashboard-tab="settings">Settings</button>
+            </aside>
+
+            <div class="dashboard-main">
+              <div class="dashboard-topbar">
+                <div>
+                  <p class="eyebrow compact">Dashboard prototype</p>
+                  <h3 id="dashboard-title">Overview</h3>
+                </div>
+                <div class="topbar-actions">
+                  <span class="pill prototype" id="api-status">API fallback mode</span>
+                  <span class="pill prototype" id="auth-status">Admin locked</span>
+                  <button class="button button-secondary is-hidden" id="admin-logout" type="button">Logout</button>
+                  <button class="discord-button" type="button" data-demo-action="connect">Connect Discord</button>
+                </div>
+              </div>
+
+              <div class="admin-login-panel" id="admin-login-panel">
+                <div>
+                  <p class="eyebrow compact">Admin access</p>
+                  <h4>Unlock live server controls</h4>
+                  <p>Match ops, betting, wallets, drafts, and command runner actions require the temporary admin password.</p>
+                </div>
+                <form id="admin-login-form" class="admin-login-form">
+                  <label>
+                    Password
+                    <input id="admin-password" type="password" autocomplete="current-password" />
+                  </label>
+                  <button class="button button-primary" type="submit">Unlock Dashboard</button>
+                </form>
+              </div>
+
+              <div class="dashboard-panel is-active" data-dashboard-panel="overview">
+                <div class="metric-row">
+                  <article class="metric-card">
+                    <span>Active modules</span>
+                    <strong>6</strong>
+                    <small>Config, rolls, builds, drafts, matches, betting, settings</small>
+                  </article>
+                  <article class="metric-card">
+                    <span>Server status</span>
+                    <strong>Ready</strong>
+                    <small>Visual-only connection state</small>
+                  </article>
+                  <article class="metric-card">
+                    <span>Asset pack</span>
+                    <strong>Pending</strong>
+                    <small>Slots prepared for Drive or zip assets</small>
+                  </article>
+                </div>
+                <div class="portal-grid">
+                  <article class="portal-card highlight-card">
+                    <span class="pill live">Bot live today</span>
+                    <h4>Discord commands keep running the show.</h4>
+                    <p>God picks, Roll Team, builds, sessions, drafts, betting, wallets, and ledgers stay in Discord until real portal APIs exist.</p>
+                  </article>
+                  <article class="portal-card">
+                    <span class="pill prototype">Portal next</span>
+                    <h4>Admins get a cleaner control surface.</h4>
+                    <p>Command defaults, role pools, match setup, and web-native Smite tools can graduate into real settings later.</p>
+                  </article>
+                </div>
+              </div>
+
+              <div class="dashboard-panel" data-dashboard-panel="commands" data-admin-panel>
+                <div class="builder-layout">
+                  <form class="builder-form" aria-label="Command configuration demo">
+                    <label>
+                      Trigger
+                      <input id="command-trigger" value=".scrimrules" />
+                    </label>
+                    <label>
+                      Response
+                      <textarea id="command-response" rows="5">Captains post lobby code, teams confirm sides, then run .draft start @blue @red. No god swaps after lock.</textarea>
+                    </label>
+                    <div class="form-row">
+                      <label>
+                        Channel scope
+                        <select id="command-channel">
+                          <option>#smite-night</option>
+                          <option>#place-bets</option>
+                          <option>#captains</option>
+                        </select>
+                      </label>
+                      <label>
+                        Role gate
+                        <select id="command-role">
+                          <option>Captains</option>
+                          <option>Admins</option>
+                          <option>Everyone</option>
+                        </select>
+                      </label>
+                    </div>
+                    <div class="switch-row">
+                      <label class="toggle-line">
+                        <input id="command-enabled" type="checkbox" checked />
+                        <span>Enabled</span>
+                      </label>
+                      <label>
+                        Cooldown
+                        <input id="command-cooldown" value="15s" />
+                      </label>
+                    </div>
+                  </form>
+
+                  <div class="discord-preview">
+                    <div class="discord-channel"># smite-night</div>
+                    <div class="bot-message">
+                      <div class="avatar">GF</div>
+                      <div class="message-card">
+                        <div class="message-kicker">Command config preview</div>
+                        <strong id="preview-trigger">.scrimrules</strong>
+                        <p id="preview-response">Captains post lobby code, teams confirm sides, then run .draft start @blue @red. No god swaps after lock.</p>
+                        <div class="preview-meta">
+                          <span id="preview-role">Captains</span>
+                          <span id="preview-cooldown">15s cooldown</span>
+                          <span id="preview-enabled">Enabled</span>
+                        </div>
+                      </div>
+                    </div>
+                    <p class="demo-note">Demo only: no command is saved or registered with Discord.</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="dashboard-panel" data-dashboard-panel="randomizer">
+                <div class="tool-workspace">
+                  <div class="tool-sidebar" aria-label="Web tool modules">
+                    <button class="tool-tab is-active" data-tool-tab="single-roll">Random God</button>
+                    <button class="tool-tab" data-tool-tab="roll-team">Roll Team</button>
+                    <button class="tool-tab" data-tool-tab="command-runner">Command Runner</button>
+                  </div>
+                  <div class="tool-panel is-active" data-tool-panel="single-roll">
+                    <div class="randomizer-preview">
+                      <div class="control-bank">
+                        <p class="eyebrow compact">God roll controls</p>
+                        <div class="chip-row" role="group" aria-label="Role selector">
+                          <button class="chip is-active" data-role="jungle">Jungle</button>
+                          <button class="chip" data-role="mid">Mid</button>
+                          <button class="chip" data-role="adc">ADC</button>
+                          <button class="chip" data-role="support">Support</button>
+                          <button class="chip" data-role="solo">Solo</button>
+                          <button class="chip" data-role="all">Any</button>
+                        </div>
+                        <div class="chip-row" role="group" aria-label="Source selector">
+                          <button class="chip is-active" data-source="website">Website pool</button>
+                          <button class="chip" data-source="tab">Tab pool</button>
+                        </div>
+                        <button class="button button-primary random-roll" type="button">Roll God</button>
+                      </div>
+                      <article class="rolled-god-card asset-slot" data-asset-slot="god-card">
+                        <img id="random-god-image" src="https://www.smitefire.com/images/v2/god/icon/thor.png" alt="Thor god portrait" />
+                        <span id="random-role">Jungle</span>
+                        <strong id="random-god">Thor</strong>
+                        <small id="random-subtitle">Assassin / Norse</small>
+                        <small id="random-command">.rgjw</small>
+                      </article>
+                    </div>
+                  </div>
+                  <div class="tool-panel" data-tool-panel="roll-team">
+                    <div class="roll-team-board">
+                      <div class="control-bank">
+                        <p class="eyebrow compact">Roll Team controls</p>
+                        <p class="tool-help">Uses the `.roll5` bot command rules, but presents five personal options for one player to choose from.</p>
+                        <button class="button button-primary" id="roll-team-button" type="button">Roll Team</button>
+                      </div>
+                      <div class="roll-team-results" id="roll-team-results" aria-live="polite">
+                        <button class="god-option-card" type="button">
+                          <span class="god-option-index">1</span>
+                          <span class="asset-slot asset-slot--god-card" data-asset-slot="god-card 160x240 portrait"><img src="https://www.smitefire.com/images/v2/god/icon/thor.png" alt="Thor god portrait" /></span>
+                          <strong>Thor</strong>
+                          <small>Norse / Assassin</small>
+                          <span class="god-option-role"><span class="asset-slot asset-slot--role-icon" data-asset-slot="role-icon 32x32 svg">J</span>Jungle</span>
+                          <span class="pick-affordance">Pick this one</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="tool-panel" data-tool-panel="command-runner" data-admin-panel>
+                    <div class="command-runner">
+                      <label>
+                        Run a Godforge command
+                        <input id="web-command-input" value=".roll5j" />
+                      </label>
+                      <button class="button button-primary" id="web-command-run" type="button">Run Command</button>
+                      <pre id="web-command-output">Select Run Command to execute through the local API when available.</pre>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="dashboard-panel" data-dashboard-panel="builds">
+                <div class="build-control-layout">
+                  <div class="control-bank">
+                    <p class="eyebrow compact">Build generator</p>
+                    <div class="chip-row" role="group" aria-label="Build role selector">
+                      <button class="chip is-active" data-build-role="adc" data-build-type="standard">ADC</button>
+                      <button class="chip" data-build-role="adc" data-build-type="str">ADC STR</button>
+                      <button class="chip" data-build-role="mid" data-build-type="int">Mid INT</button>
+                      <button class="chip" data-build-role="jungle" data-build-type="str">Jungle STR</button>
+                      <button class="chip" data-build-role="solo" data-build-type="hyb">Solo HYB</button>
+                      <button class="chip" data-build-role="support" data-build-type="">Support</button>
+                      <button class="chip" data-build-role="chaos" data-build-type="">Chaos</button>
+                    </div>
+                    <div class="stepper-row">
+                      <label>
+                        Item count
+                        <input id="build-count" type="number" min="1" max="6" value="6" />
+                      </label>
+                      <button class="button button-primary" id="build-roll-button" type="button">Generate Build</button>
+                    </div>
+                  </div>
+                  <div class="build-surface">
+                    <div class="build-slots asset-slot" data-asset-slot="item-card" id="build-slots">
+                    <div>Deathbringer</div>
+                    <div>The Executioner</div>
+                    <div>Qin's Sais</div>
+                    <div>Dominance</div>
+                    <div>Asi</div>
+                    <div>Titan's Bane</div>
+                    </div>
+                    <div class="stat-panel">
+                    <h4>Build Stats</h4>
+                    <dl>
+                      <div><dt>Power</dt><dd>180</dd></div>
+                      <div><dt>Attack Speed</dt><dd>2.05</dd></div>
+                      <div><dt>Lifesteal</dt><dd>18%</dd></div>
+                      <div><dt>Penetration</dt><dd>35</dd></div>
+                      <div><dt>Crit Chance</dt><dd>25%</dd></div>
+                      <div><dt>Cooldown</dt><dd>10%</dd></div>
+                    </dl>
+                    <div class="filter-box">
+                      <label><input type="checkbox" checked /> Strength</label>
+                      <label><input type="checkbox" /> Hybrid</label>
+                      <label><input type="checkbox" checked /> Conquest safe</label>
+                    </div>
+                    <p class="demo-note" id="build-command-label">.adc</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="dashboard-panel" data-dashboard-panel="drafts" data-admin-panel>
+                <div class="draft-room">
+                  <div class="draft-room-sidebar">
+                    <label>
+                      Blue captain
+                      <input id="blue-captain" value="AtlasMain" />
+                    </label>
+                    <label>
+                      Red captain
+                      <input id="red-captain" value="NeithEnjoyer" />
+                    </label>
+                    <button class="button button-primary" id="draft-start" type="button">Start Draft</button>
+                    <label>
+                      God action
+                      <input id="draft-god-input" value="Thor" />
+                    </label>
+                    <div class="draft-action-row">
+                      <button class="button button-secondary" id="draft-action" type="button">Submit Turn</button>
+                      <button class="button button-secondary" id="draft-undo" type="button">Undo</button>
+                    </div>
+                    <p class="demo-note" id="draft-status">Start a draft to use the local API draft engine.</p>
+                  </div>
+                  <div class="draft-board-web">
+                    <div class="turn-card">
+                      <span class="pill live" id="draft-id-label">No draft</span>
+                      <h4 id="draft-turn-label">Ready to start</h4>
+                      <p id="draft-phase-label">Uses the same local turn order as the Discord fallback draft engine.</p>
+                    </div>
+                    <div class="draft-console">
+                      <div class="draft-column blue">
+                        <span>Blue bans</span>
+                        <strong id="blue-bans">-</strong>
+                        <span>Blue picks</span>
+                        <p id="blue-picks">-</p>
+                      </div>
+                      <div class="draft-column red">
+                        <span>Red bans</span>
+                        <strong id="red-bans">-</strong>
+                        <span>Red picks</span>
+                        <p id="red-picks">-</p>
+                      </div>
+                    </div>
+                    <div class="fearless-strip">
+                      <span>Fearless pool</span>
+                      <strong id="fearless-pool">None yet</strong>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="dashboard-panel" data-dashboard-panel="match" data-admin-panel>
+                <div class="ops-layout">
+                  <article class="ops-panel ops-panel-wide">
+                    <div class="panel-heading-row">
+                      <div>
+                        <p class="eyebrow compact">Match lifecycle</p>
+                        <h4>Active Matches</h4>
+                      </div>
+                      <button class="button button-secondary" id="match-refresh" type="button">Refresh</button>
+                    </div>
+                    <div class="match-list" id="active-matches" aria-live="polite"></div>
+                  </article>
+
+                  <article class="ops-panel">
+                    <p class="eyebrow compact">Create Match</p>
+                    <form id="match-create-form" class="stack-form">
+                      <label>
+                        Team 1
+                        <input id="match-team1" placeholder="Solaris" />
+                      </label>
+                      <label>
+                        Team 2
+                        <input id="match-team2" placeholder="Onyx" />
+                      </label>
+                      <button class="button button-primary" type="submit">Create Match</button>
+                    </form>
+                  </article>
+
+                  <article class="ops-panel">
+                    <p class="eyebrow compact">Status</p>
+                    <form id="match-status-form" class="stack-form">
+                      <label>
+                        Match ID
+                        <input id="match-status-id" placeholder="GF-0007" />
+                      </label>
+                      <label>
+                        Status
+                        <select id="match-status-value">
+                          <option value="betting_open">Betting open</option>
+                          <option value="in_progress">In progress</option>
+                          <option value="completed">Completed</option>
+                          <option value="settled">Settled</option>
+                        </select>
+                      </label>
+                      <button class="button button-secondary" type="submit">Update Status</button>
+                    </form>
+                  </article>
+
+                  <article class="ops-panel">
+                    <p class="eyebrow compact">Resolve Winner</p>
+                    <form id="match-resolve-form" class="stack-form">
+                      <label>
+                        Match ID
+                        <input id="match-resolve-id" placeholder="GF-0007" />
+                      </label>
+                      <label>
+                        Winner
+                        <input id="match-winner" placeholder="Solaris" />
+                      </label>
+                      <button class="button button-secondary" type="submit">Resolve Win Bets</button>
+                    </form>
+                  </article>
+
+                  <article class="ops-panel">
+                    <p class="eyebrow compact">Resolve Prop</p>
+                    <form id="match-prop-resolve-form" class="stack-form">
+                      <label>
+                        Match ID
+                        <input id="match-prop-id" placeholder="GF-0007" />
+                      </label>
+                      <label>
+                        Player
+                        <input id="match-prop-player" placeholder="Solaris ADC" />
+                      </label>
+                      <div class="form-row">
+                        <label>
+                          Stat
+                          <input id="match-prop-stat" placeholder="kills" />
+                        </label>
+                        <label>
+                          Actual
+                          <input id="match-prop-actual" type="number" step="0.1" value="8" />
+                        </label>
+                      </div>
+                      <button class="button button-secondary" type="submit">Resolve Prop Bets</button>
+                    </form>
+                  </article>
+                </div>
+              </div>
+
+              <div class="dashboard-panel" data-dashboard-panel="betting" data-admin-panel>
+                <div class="ops-layout">
+                  <article class="ops-panel ops-panel-wide">
+                    <div class="panel-heading-row">
+                      <div>
+                        <p class="eyebrow compact">Betting surface</p>
+                        <h4>Active Bets</h4>
+                      </div>
+                      <button class="button button-secondary" id="betting-refresh" type="button">Refresh</button>
+                    </div>
+                    <div class="bet-list" id="active-bets" aria-live="polite"></div>
+                  </article>
+
+                  <article class="ops-panel">
+                    <p class="eyebrow compact">Wallets</p>
+                    <h4>Leaderboard</h4>
+                    <div class="wallet-list" id="wallet-leaderboard" aria-live="polite"></div>
+                  </article>
+
+                  <article class="ops-panel">
+                    <p class="eyebrow compact">Place Bet</p>
+                    <form id="place-bet-form" class="stack-form">
+                      <div class="form-row">
+                        <label>
+                          Match ID
+                          <input id="bet-match-id" placeholder="GF-0007" />
+                        </label>
+                        <label>
+                          Bettor
+                          <input id="bet-bettor" placeholder="AtlasMain" />
+                        </label>
+                      </div>
+                      <div class="form-row">
+                        <label>
+                          Type
+                          <select id="bet-type">
+                            <option value="win">Win</option>
+                            <option value="prop">Prop</option>
+                          </select>
+                        </label>
+                        <label>
+                          Amount
+                          <input id="bet-amount" type="number" min="1" step="1" value="50" />
+                        </label>
+                      </div>
+                      <div id="win-bet-fields">
+                        <label>
+                          Team
+                          <input id="bet-team" placeholder="Solaris" />
+                        </label>
+                      </div>
+                      <div id="prop-bet-fields" class="is-hidden">
+                        <label>
+                          Player
+                          <input id="bet-player" placeholder="Solaris ADC" />
+                        </label>
+                        <div class="form-row">
+                          <label>
+                            Stat
+                            <input id="bet-stat" placeholder="kills" />
+                          </label>
+                          <label>
+                            Direction
+                            <select id="bet-direction">
+                              <option value="over">Over</option>
+                              <option value="under">Under</option>
+                            </select>
+                          </label>
+                        </div>
+                        <label>
+                          Threshold
+                          <input id="bet-threshold" type="number" step="0.1" value="7.5" />
+                        </label>
+                      </div>
+                      <button class="button button-primary" type="submit">Place Bet</button>
+                    </form>
+                  </article>
+
+                  <article class="ops-panel">
+                    <p class="eyebrow compact">Admin Wallet Actions</p>
+                    <form id="wallet-adjust-form" class="stack-form">
+                      <label>
+                        Player
+                        <input id="wallet-target" placeholder="AtlasMain" />
+                      </label>
+                      <label>
+                        Action
+                        <select id="wallet-action">
+                          <option value="give">Give</option>
+                          <option value="take">Take</option>
+                          <option value="set">Set</option>
+                        </select>
+                      </label>
+                      <label>
+                        Amount
+                        <input id="wallet-amount" type="number" min="0" step="1" value="100" />
+                      </label>
+                      <button class="button button-primary" type="submit">Apply Wallet Change</button>
+                    </form>
+                  </article>
+
+                  <article class="ops-panel">
+                    <p class="eyebrow compact">Ledger Controls</p>
+                    <h4>Reset weekly ledger</h4>
+                    <p class="tool-help">Clears matches and bets only. Wallet balances remain in place.</p>
+                    <button class="button button-secondary danger-button" id="ledger-reset-button" type="button">Reset Ledger</button>
+                  </article>
+                </div>
+              </div>
+
+              <div class="dashboard-panel" data-dashboard-panel="settings" data-admin-panel>
+                <div class="settings-grid">
+                  <article class="settings-card">
+                    <h4>Asset slots</h4>
+                    <p>Prepared names: god-card, item-card, role-icon, dashboard-hero, background-texture.</p>
+                  </article>
+                  <article class="settings-card">
+                    <h4>Skipped for prototype</h4>
+                    <p>OAuth, guild auth, storage, bot command registration, and APIs are tracked in TODO.md.</p>
+                  </article>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="web-tools section-wrap" id="web-tools">
+          <div class="section-heading">
+            <p class="eyebrow">Web-native Smite tools</p>
+            <h2>Same Godforge energy, without requiring Discord for every action.</h2>
+          </div>
+          <div class="tools-layout">
+            <article class="tool-card large">
+              <span class="pill prototype">Randomizer + builds</span>
+              <h3>Roll a god, shape the build, preview the output.</h3>
+              <p>
+                This prototype keeps the web surface focused on the lowest-risk shared logic:
+                role/source randomizers and build previews. Later, a Python API can wrap the
+                existing parser, loader, and picker modules so Discord and web stay in sync.
+              </p>
+            </article>
+            <div class="tool-stack">
+              <article class="tool-card">
+                <h3>Filter-inspired controls</h3>
+                <p>Role chips, source chips, stat panels, and build slots make the Smite utility feel tangible.</p>
+              </article>
+              <article class="tool-card">
+                <h3>Owned graphics ready</h3>
+                <p>Visual slots are named now so production-grade god, item, and texture assets can drop in later.</p>
+              </article>
+            </div>
+          </div>
+        </section>
+
+        <section class="features section-wrap" id="features">
+          <div class="section-heading">
+            <p class="eyebrow">Core features</p>
+            <h2>Bot today, portal tomorrow, one product direction.</h2>
+          </div>
+          <div class="card-grid">
+            <article class="feature-card">
+              <span class="icon">RG</span>
+              <h3>Role-aware god rolls</h3>
+              <p>Roll from full roster, curated website pools, or in-game tab pools by role.</p>
+            </article>
+            <article class="feature-card">
+              <span class="icon">BD</span>
+              <h3>Build generators</h3>
+              <p>Generate chaos builds or role-specific item lists with optional item counts.</p>
+            </article>
+            <article class="feature-card">
+              <span class="icon">CC</span>
+              <h3>Command config direction</h3>
+              <p>Prototype admin UI shows how server-specific command behaviour could be managed later.</p>
+            </article>
+            <article class="feature-card">
+              <span class="icon">FD</span>
+              <h3>Fearless drafts</h3>
+              <p>Turn order, bans, picks, undo, next-game flow, and fearless pool tracking.</p>
+            </article>
+            <article class="feature-card">
+              <span class="icon">$</span>
+              <h3>Match betting</h3>
+              <p>Admin-created matches, player wagers, props, wallets, and pool-proportional payouts.</p>
+            </article>
+            <article class="feature-card">
+              <span class="icon">UI</span>
+              <h3>Web admin surface</h3>
+              <p>A future portal can expose settings and tools without crowding Discord channels.</p>
+            </article>
+          </div>
+        </section>
+
+        <section class="commands section-wrap" id="commands">
+          <div class="section-heading">
+            <p class="eyebrow">Command examples</p>
+            <h2>Compact in Discord, clearer in the portal.</h2>
+          </div>
+          <div class="command-grid">
+            <div class="terminal" aria-label="Godforge command examples">
+              <p><span>Gods</span><code>.rgj</code><em>random jungle god</em></p>
+              <p><span>Builds</span><code>.adcstr 3</code><em>three strength ADC items</em></p>
+              <p><span>Sessions</span><code>.session start</code><em>enable tracked picks</em></p>
+              <p><span>Draft</span><code>.draft start @blue @red</code><em>start fearless set</em></p>
+              <p><span>Custom</span><code>.scrimrules</code><em>future server-defined response</em></p>
+            </div>
+            <div class="command-copy">
+              <h3>One command system, two user experiences.</h3>
+              <p>
+                Discord stays fast and text-native. The portal can later make setup, defaults,
+                command configuration and Smite utility controls easier for admins to reason about.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section class="roadmap section-wrap" id="roadmap">
+          <div class="section-heading">
+            <p class="eyebrow">Roadmap</p>
+            <h2>What is real now, what is prototype, and what comes later.</h2>
+          </div>
+          <div class="roadmap-track expanded">
+            <article class="roadmap-item">
+              <span>Live</span>
+              <h3>Discord bot commands</h3>
+              <p>Rolls, builds, drafts, sessions, betting, wallets, and ledger flows exist in the bot.</p>
+            </article>
+            <article class="roadmap-item">
+              <span>Prototype</span>
+              <h3>Admin portal UI</h3>
+              <p>Static dashboard preview for server settings, command config, and web tools.</p>
+            </article>
+            <article class="roadmap-item">
+              <span>Backend</span>
+              <h3>Shared API layer</h3>
+              <p>Wrap parser, loader, and picker logic so the website uses the same source of truth.</p>
+            </article>
+            <article class="roadmap-item">
+              <span>OAuth</span>
+              <h3>Discord guild auth</h3>
+              <p>Authenticate admins and authorize only servers where they can manage Godforge.</p>
+            </article>
+            <article class="roadmap-item">
+              <span>Commands</span>
+              <h3>Custom execution</h3>
+              <p>Persist server commands and let the bot resolve them before unknown commands go silent.</p>
+            </article>
+            <article class="roadmap-item">
+              <span>Assets</span>
+              <h3>Production graphics</h3>
+              <p>Replace placeholders with owned god, item, role, hero, and background assets.</p>
+            </article>
+          </div>
+        </section>
+
+        <section class="faq section-wrap" id="faq">
+          <div class="section-heading">
+            <p class="eyebrow">FAQ</p>
+            <h2>Prototype boundaries, clearly marked.</h2>
+          </div>
+          <div class="faq-list">
+            <details open>
+              <summary>Does this add real Discord OAuth?</summary>
+              <p>No. Connect Discord is visual-only in this prototype. Real OAuth is tracked in TODO.md.</p>
+            </details>
+            <details>
+              <summary>Is command config saved anywhere?</summary>
+              <p>No. The builder is a product demo. Bot-side command configuration storage and execution are future work.</p>
+            </details>
+            <details>
+              <summary>Does the website call the bot backend?</summary>
+              <p>No. This is static HTML, CSS, and JavaScript. A shared API layer is planned later.</p>
+            </details>
+            <details>
+              <summary>Where do production graphics go?</summary>
+              <p>The page uses named asset slots for god-card, item-card, role-icon, dashboard-hero, and background-texture.</p>
+            </details>
+          </div>
+        </section>
+      </main>
+
+      <footer class="footer section-wrap">
+        <div>
+          <a class="brand" href="#top">
+            <span class="brand-mark">GF</span>
+            <span>Godforge</span>
+          </a>
+          <p>Smite 2 Discord tooling and admin portal concepts for rolls, builds, drafts, command config, and match nights.</p>
+        </div>
+        <div class="footer-links">
+          <a href="#dashboard">Dashboard</a>
+          <a href="#web-tools">Web Tools</a>
+          <a href="#roadmap">Roadmap</a>
+        </div>
+      </footer>
+
+      <div class="toast" role="status" aria-live="polite" data-toast>
+        Demo only: Discord auth is planned, not active in this static prototype.
+      </div>
+    </div>
+    <script type="module" src="./js/ui.js"></script>
+  </body>
+</html>

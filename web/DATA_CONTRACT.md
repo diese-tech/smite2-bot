@@ -1,0 +1,143 @@
+# Godforge Dashboard Data Contract
+
+The web dashboard consumes these JSON shapes from `web_api` and from demo fallback data in `web/js/api.js`.
+
+## Match
+
+```ts
+type MatchStatus = "betting_open" | "in_progress" | "completed" | "settled";
+
+type Match = {
+  match_id: string;
+  teams: {
+    team1: string;
+    team2: string;
+  };
+  status: MatchStatus;
+  bets: Bet[];
+  result: string | null;
+  winner: string | null;
+  resolved_props: ResolvedProp[];
+};
+
+type Ledger = {
+  matches: Match[];
+  embed_message_id: number | null;
+  embed_channel_id: number | null;
+};
+```
+
+## Bet
+
+```ts
+type WinBet = {
+  type: "win";
+  user_id: number;
+  username: string;
+  team: string;
+  amount: number;
+};
+
+type PropBet = {
+  type: "prop";
+  user_id: number;
+  username: string;
+  player: string;
+  stat: string;
+  direction: "over" | "under";
+  threshold: number;
+  amount: number;
+};
+
+type Bet = WinBet | PropBet;
+
+type ResolvedProp = {
+  player: string;
+  stat: string;
+  actual_value: number;
+  threshold: number;
+  winning_direction: "over" | "under" | null;
+};
+```
+
+`POST /api/bet/place` returns the placed `Bet`, the updated `Match`, and the bettor's updated wallet summary:
+
+```ts
+type PlaceBetResult = {
+  ok: true;
+  bet: Bet;
+  match: Match;
+  wallet: {
+    user_id: number;
+    username: string;
+    balance: number;
+  };
+};
+```
+
+## Wallet
+
+`data/wallets.json` is keyed by Discord user id. The local web API also accepts a plain username and creates a stable local-only numeric id for dashboard testing.
+
+```ts
+type Wallets = Record<string, Wallet>;
+
+type Wallet = {
+  username: string;
+  balance: number;
+};
+```
+
+## God
+
+```ts
+type God = {
+  name: string;
+  role: "jungle" | "mid" | "adc" | "support" | "solo" | null;
+  source: "website" | "tab";
+  command: string;
+  imageUrl: string;
+  pantheon?: string;
+  class?: string;
+};
+```
+
+## Build
+
+```ts
+type Build = {
+  role: "adc" | "mid" | "jungle" | "solo" | "support" | "chaos";
+  type: "standard" | "str" | "int" | "hyb" | "" | null;
+  count: number;
+  items: string[];
+  command: string;
+};
+```
+
+## Draft State
+
+```ts
+type DraftState = {
+  draftId: string;
+  gameNumber: number;
+  phase: string;
+  step: number;
+  complete: boolean;
+  currentTurn: null | {
+    team: "blue" | "red";
+    action: "ban" | "pick";
+  };
+  blueCaptain: string;
+  redCaptain: string;
+  bans: {
+    blue: string[];
+    red: string[];
+  };
+  picks: {
+    blue: string[];
+    red: string[];
+  };
+  fearlessPool: string[];
+  unavailableGods: string[];
+};
+```
