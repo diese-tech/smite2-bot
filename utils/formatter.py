@@ -290,6 +290,7 @@ def format_help_page2() -> discord.Embed:
 
     embed.add_field(name="Ledger  (admin only)", value=(
         "`.ledger reset` — clear all matches for a new week\n"
+        "`.ledger post` — repost the live embed in #betting-ledger\n"
         "_#betting-ledger has a live paginated embed — use ⬅️ ➡️ to browse._"
     ), inline=False)
 

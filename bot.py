@@ -1179,8 +1179,11 @@ async def _handle_ledger_command(message: discord.Message):
     sub = parts[1].lower() if len(parts) > 1 else ""
     if sub == "reset":
         await _ledger_reset(message)
+    elif sub == "post":
+        await update_betting_embed(message.channel)
+        await message.channel.send("✅ Ledger embed reposted.")
     else:
-        await message.channel.send("⚠️ Usage: `.ledger reset`")
+        await message.channel.send("⚠️ Usage: `.ledger reset` or `.ledger post`")
 
 
 async def _ledger_reset(message: discord.Message):
