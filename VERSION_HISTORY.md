@@ -13,13 +13,16 @@ Included scope:
 - Discord ledger posting and embed update behavior.
 - Tests for match creation, team matching, ledger posting, normal-user bets, and admin commands.
 
-## v2.1 - Live Dashboard Bridge
+## v2.1.0 - Live Dashboard Bridge
 
-Current local work is staged as v2.1 candidate work unless a later release decision changes the version.
+Current local work is staged as v2.1.0 candidate work. Tag `v2.1.0` after Discord OAuth and DB-backed dashboard basics are working.
 
 Included or in-progress scope:
 
 - Railway single-service launcher for bot plus web/API.
+- Public dashboard domain: `https://godforge-hub.up.railway.app`.
+- Planned Discord OAuth client id: `1493371999031136318`.
+- Local Discord OAuth start/callback endpoints staged for `identify guilds`.
 - Temporary password-protected admin dashboard.
 - Match Ops, Betting, Wallets, Settings, and Admin Overview panels.
 - Manual Discord ledger sync from the dashboard.
@@ -30,7 +33,7 @@ Included or in-progress scope:
 
 Substantial work after v2.0 should be tagged deliberately before deployment or release notes:
 
-- `v2.1`: Live admin dashboard bridge and MEE6-style management surface.
+- `v2.1.0`: Live admin dashboard bridge and MEE6-style management surface after OAuth and DB-backed dashboard basics are working.
 - `v2.2`: Discord OAuth, guild picker, and guild permission checks.
 - `v2.3`: Database-backed settings, wallets, ledger, and durable audit rows.
 - `v3.0`: Full dual-use platform milestone with standalone web users and production-grade assets.

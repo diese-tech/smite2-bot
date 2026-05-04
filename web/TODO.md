@@ -2,7 +2,7 @@
 
 This file tracks work intentionally skipped in the static prototype.
 
-Version note: the ledger system is the v2.0 milestone. Substantial dashboard bridge work after that should be grouped, tagged, and documented as v2.1+ work in `../VERSION_HISTORY.md` before release.
+Version note: the ledger system is the v2.0 milestone. Dashboard bridge work is staged for `v2.1.0`, to be tagged after OAuth and DB-backed dashboard basics are working.
 
 ## Completed in the Local Prototype
 
@@ -52,7 +52,12 @@ Version note: the ledger system is the v2.0 milestone. Substantial dashboard bri
 ## Discord OAuth and Guild Authorization
 
 - Create a Discord OAuth application for the web portal.
+- Railway public URL: `https://godforge-hub.up.railway.app`.
+- Discord client id: `1493371999031136318`.
+- Planned OAuth callback: `https://godforge-hub.up.railway.app/api/auth/discord/callback`.
+- Add `DISCORD_CLIENT_SECRET` directly in Railway when OAuth implementation starts; do not commit it.
 - Add login with Discord using the `identify` and `guilds` scopes.
+- Local OAuth endpoints are staged: `GET /api/auth/discord/start` and `GET /api/auth/discord/callback`.
 - Show only guilds where the user has the required manage/admin permission.
 - Verify the Godforge bot is installed before allowing server settings edits.
 - Add a clear install flow for guilds that do not have the bot yet.

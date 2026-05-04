@@ -6,7 +6,7 @@ This folder is intentionally separate from the Python bot runtime. It does not c
 
 The dashboard, custom-command builder, Discord connection controls, and portal controls do not authenticate with Discord, persist data, deploy anywhere, or register bot commands. Future production work is tracked in `TODO.md`.
 
-Product-level release milestones are tracked in `../VERSION_HISTORY.md`. The ledger system is v2.0; substantial dashboard bridge work after that is staged as v2.1 candidate work unless explicitly retagged.
+Product-level release milestones are tracked in `../VERSION_HISTORY.md`. The ledger system is v2.0; dashboard bridge work is staged as v2.1.0 candidate work, to be tagged after OAuth and DB-backed dashboard basics are working.
 
 The optional local API in `../web_api` exposes a development-only bridge to the existing Godforge parser, loader, picker, draft, ledger, and wallet modules. When that API is not running, the website stays previewable with demo fallback data for god rolls, Roll Team, builds, matches, bets, and wallets.
 
@@ -60,6 +60,34 @@ python railway_app.py
 ```
 
 It starts the web/API server on Railway's `$PORT` and runs the Discord bot in the same service so both use the mounted `/app/data` volume.
+
+Current Railway public URL:
+
+```text
+https://godforge-hub.up.railway.app
+```
+
+Planned Discord OAuth callback:
+
+```text
+https://godforge-hub.up.railway.app/api/auth/discord/callback
+```
+
+Planned Discord OAuth client id:
+
+```text
+1493371999031136318
+```
+
+Do not commit the Discord client secret. Add it directly to Railway as `DISCORD_CLIENT_SECRET` when OAuth implementation starts.
+
+OAuth Railway variables:
+
+```text
+DISCORD_CLIENT_ID=1493371999031136318
+DISCORD_CLIENT_SECRET=<set in Railway>
+DISCORD_OAUTH_REDIRECT_URI=https://godforge-hub.up.railway.app/api/auth/discord/callback
+```
 
 ## Build
 

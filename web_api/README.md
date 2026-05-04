@@ -59,6 +59,21 @@ POST /api/auth/login
 POST /api/auth/logout
 ```
 
+Discord OAuth login is staged through:
+
+```text
+GET /api/auth/discord/start
+GET /api/auth/discord/callback
+```
+
+Required Railway variables:
+
+```text
+DISCORD_CLIENT_ID=1493371999031136318
+DISCORD_CLIENT_SECRET=<set in Railway>
+DISCORD_OAUTH_REDIRECT_URI=https://godforge-hub.up.railway.app/api/auth/discord/callback
+```
+
 Protected admin telemetry and sync endpoints are also available after login:
 
 ```text
@@ -81,6 +96,8 @@ POST /api/admin/sync/ledger
 ```text
 GET  /api/health
 GET  /api/auth/status
+GET  /api/auth/discord/start
+GET  /api/auth/discord/callback
 GET  /api/admin/audit?limit=25
 GET  /api/admin/status
 GET  /api/commands/custom?guild_id=global

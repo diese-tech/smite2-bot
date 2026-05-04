@@ -146,6 +146,17 @@ type DraftState = {
 
 `GET /api/admin/status` is protected and is used by the Overview operations monitor.
 
+`GET /api/auth/status` also reports whether Discord OAuth env vars are configured:
+
+```ts
+type AuthStatus = {
+  ok: true;
+  authenticated: boolean;
+  configured: boolean;
+  discordOAuthConfigured: boolean;
+};
+```
+
 ```ts
 type AdminStatusResponse = {
   ok: true;

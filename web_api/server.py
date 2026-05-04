@@ -21,7 +21,8 @@ import sys
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from urllib.parse import parse_qs, urlparse
+from urllib.parse import parse_qs, urlencode, urlparse
+from urllib.request import Request, urlopen
 
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
@@ -35,7 +36,9 @@ HOST = os.getenv("HOST", "127.0.0.1")
 PORT = int(os.getenv("PORT", "8787"))
 WEB_ROOT = ROOT / "web"
 SESSION_COOKIE = "godforge_admin"
+OAUTH_STATE_COOKIE = "godforge_oauth_state"
 SESSION_MAX_AGE = 60 * 60 * 12
+DISCORD_API_BASE = "https://discord.com/api"
 
 ROLE_CODES = {
     "jungle": "j",
@@ -181,7 +184,16 @@ class Handler(BaseHTTPRequestHandler):
             if parsed.path == "/api/health":
                 self._send_json({"ok": True, "service": "godforge-web-api"})
             elif parsed.path == "/api/auth/status":
-                self._send_json({"ok": True, "authenticated": self._is_authenticated(), "configured": _auth_configured()})
+                self._send_json({
+                    "ok": True,
+                    "authenticated": self._is_authenticated(),
+                    "configured": _auth_configured(),
+                    "discordOAuthConfigured": _discord_oauth_configured(),
+                })
+            elif parsed.path == "/api/auth/discord/start":
+                self._discord_oauth_start()
+            elif parsed.path == "/api/auth/discord/callback":
+                self._discord_oauth_callback(query)
             elif parsed.path == "/api/gods/roll":
                 role = _role_or_none(_first(query, "role"))
                 source = _source(_first(query, "source"))
@@ -430,6 +442,69 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Content-Length", str(len(data)))
         self.end_headers()
         self.wfile.write(data)
+
+    def _discord_oauth_start(self):
+        if not _discord_oauth_configured():
+            self._send_error(503, "Discord OAuth is not configured.")
+            return
+
+        state = _oauth_state()
+        query = urlencode({
+            "client_id": _discord_client_id(),
+            "redirect_uri": _discord_redirect_uri(),
+            "response_type": "code",
+            "scope": "identify guilds",
+            "state": state,
+            "prompt": "none",
+        })
+        self.send_response(302)
+        self.send_header("Location", f"{DISCORD_API_BASE}/oauth2/authorize?{query}")
+        self.send_header("Set-Cookie", _cookie_header(_sign_oauth_state(state), name=OAUTH_STATE_COOKIE, max_age=600))
+        self.send_header("Content-Length", "0")
+        self.end_headers()
+
+    def _discord_oauth_callback(self, query: dict):
+        if not _discord_oauth_configured():
+            self._send_error(503, "Discord OAuth is not configured.")
+            return
+
+        error = _first(query, "error")
+        if error:
+            self._redirect_with_auth_result(False, error)
+            return
+
+        code = _first(query, "code")
+        state = _first(query, "state")
+        stored_state = _cookies(self.headers.get("Cookie", "")).get(OAUTH_STATE_COOKIE, "")
+
+        if not code or not state or not _verify_oauth_state(state, stored_state):
+            self._redirect_with_auth_result(False, "invalid_oauth_state")
+            return
+
+        try:
+            token = _exchange_discord_code(code)
+            profile = _fetch_discord_user(token["access_token"])
+        except Exception as exc:
+            print(f"Discord OAuth failed: {exc}")
+            self._redirect_with_auth_result(False, "oauth_exchange_failed")
+            return
+
+        session = _sign_session(int(time.time()) + SESSION_MAX_AGE)
+        self.send_response(302)
+        self.send_header("Location", "/#dashboard?auth=discord")
+        self.send_header("Set-Cookie", _cookie_header(session))
+        self.send_header("Set-Cookie", f"{OAUTH_STATE_COOKIE}=; Path=/; Max-Age=0; HttpOnly; SameSite=Lax")
+        self.send_header("Content-Length", "0")
+        self.end_headers()
+        _record_audit("auth.discord_login", profile.get("username") or profile.get("id", "discord-user"))
+
+    def _redirect_with_auth_result(self, success: bool, reason: str):
+        suffix = "ok" if success else f"failed:{reason}"
+        self.send_response(302)
+        self.send_header("Location", f"/#dashboard?auth={suffix}")
+        self.send_header("Set-Cookie", f"{OAUTH_STATE_COOKIE}=; Path=/; Max-Age=0; HttpOnly; SameSite=Lax")
+        self.send_header("Content-Length", "0")
+        self.end_headers()
 
     def _logout(self):
         data = json.dumps({"ok": True, "authenticated": False}).encode("utf-8")
@@ -786,8 +861,76 @@ def _verify_session(token: str) -> bool:
     return hmac.compare_digest(signature, expected)
 
 
-def _cookie_header(token: str) -> str:
-    return f"{SESSION_COOKIE}={token}; Path=/; Max-Age={SESSION_MAX_AGE}; HttpOnly; SameSite=Lax"
+def _discord_client_id() -> str:
+    return os.getenv("DISCORD_CLIENT_ID", "")
+
+
+def _discord_client_secret() -> str:
+    return os.getenv("DISCORD_CLIENT_SECRET", "")
+
+
+def _discord_redirect_uri() -> str:
+    return os.getenv("DISCORD_OAUTH_REDIRECT_URI", "https://godforge-hub.up.railway.app/api/auth/discord/callback")
+
+
+def _discord_oauth_configured() -> bool:
+    return bool(_discord_client_id() and _discord_client_secret() and _discord_redirect_uri())
+
+
+def _oauth_state() -> str:
+    return base64.urlsafe_b64encode(os.urandom(24)).decode("ascii").rstrip("=")
+
+
+def _sign_oauth_state(state: str) -> str:
+    signature = hmac.new(_auth_secret(), state.encode("utf-8"), hashlib.sha256).hexdigest()
+    token = f"{state}:{signature}".encode("utf-8")
+    return base64.urlsafe_b64encode(token).decode("ascii")
+
+
+def _verify_oauth_state(state: str, token: str) -> bool:
+    if not state or not token:
+        return False
+    try:
+        decoded = base64.urlsafe_b64decode(token.encode("ascii")).decode("utf-8")
+        stored_state, signature = decoded.split(":", 1)
+    except (ValueError, UnicodeDecodeError):
+        return False
+    if not hmac.compare_digest(stored_state, state):
+        return False
+    expected = hmac.new(_auth_secret(), state.encode("utf-8"), hashlib.sha256).hexdigest()
+    return hmac.compare_digest(signature, expected)
+
+
+def _exchange_discord_code(code: str) -> dict:
+    data = urlencode({
+        "client_id": _discord_client_id(),
+        "client_secret": _discord_client_secret(),
+        "grant_type": "authorization_code",
+        "code": code,
+        "redirect_uri": _discord_redirect_uri(),
+    }).encode("utf-8")
+    request = Request(
+        f"{DISCORD_API_BASE}/oauth2/token",
+        data=data,
+        headers={"Content-Type": "application/x-www-form-urlencoded"},
+        method="POST",
+    )
+    with urlopen(request, timeout=8) as response:
+        return json.loads(response.read().decode("utf-8"))
+
+
+def _fetch_discord_user(access_token: str) -> dict:
+    request = Request(
+        f"{DISCORD_API_BASE}/users/@me",
+        headers={"Authorization": f"Bearer {access_token}"},
+        method="GET",
+    )
+    with urlopen(request, timeout=8) as response:
+        return json.loads(response.read().decode("utf-8"))
+
+
+def _cookie_header(token: str, name: str = SESSION_COOKIE, max_age: int = SESSION_MAX_AGE) -> str:
+    return f"{name}={token}; Path=/; Max-Age={max_age}; HttpOnly; SameSite=Lax"
 
 
 def _cookies(raw_cookie: str) -> dict[str, str]:

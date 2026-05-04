@@ -10,6 +10,7 @@ import sys
 import threading
 import types
 import urllib.error
+import urllib.parse
 import urllib.request
 
 from utils import ledger as ledger_utils
@@ -30,7 +31,12 @@ def _stop_server(httpd):
     httpd.server_close()
 
 
-def _request(method, url, payload=None, cookie=None):
+class _NoRedirect(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        return None
+
+
+def _request(method, url, payload=None, cookie=None, follow_redirects=True):
     data = None if payload is None else json.dumps(payload).encode("utf-8")
     request = urllib.request.Request(url, data=data, method=method)
     if payload is not None:
@@ -38,8 +44,10 @@ def _request(method, url, payload=None, cookie=None):
     if cookie:
         request.add_header("Cookie", cookie)
 
+    opener = urllib.request.build_opener() if follow_redirects else urllib.request.build_opener(_NoRedirect)
+
     try:
-        with urllib.request.urlopen(request, timeout=3) as response:
+        with opener.open(request, timeout=3) as response:
             body = response.read().decode("utf-8")
             parsed = json.loads(body) if body else {}
             return response.status, parsed, response.headers
@@ -108,6 +116,100 @@ def test_wrong_password_does_not_unlock_admin_endpoints(monkeypatch, tmp_ledger,
 
         status, payload, _ = _request("GET", f"{base}/api/wallets")
         assert status == 401
+    finally:
+        _stop_server(httpd)
+
+
+def test_auth_status_reports_discord_oauth_configuration(monkeypatch, tmp_ledger, tmp_wallets):
+    monkeypatch.setenv("GODFORGE_ADMIN_PASSWORD", "secret-test")
+    monkeypatch.delenv("DISCORD_CLIENT_ID", raising=False)
+    monkeypatch.delenv("DISCORD_CLIENT_SECRET", raising=False)
+    monkeypatch.delenv("DISCORD_OAUTH_REDIRECT_URI", raising=False)
+    httpd, base = _start_server()
+    try:
+        status, payload, _ = _request("GET", f"{base}/api/auth/status")
+        assert status == 200
+        assert payload["discordOAuthConfigured"] is False
+    finally:
+        _stop_server(httpd)
+
+    monkeypatch.setenv("DISCORD_CLIENT_ID", "1493371999031136318")
+    monkeypatch.setenv("DISCORD_CLIENT_SECRET", "oauth-secret")
+    monkeypatch.setenv("DISCORD_OAUTH_REDIRECT_URI", "https://godforge-hub.up.railway.app/api/auth/discord/callback")
+    httpd, base = _start_server()
+    try:
+        status, payload, _ = _request("GET", f"{base}/api/auth/status")
+        assert status == 200
+        assert payload["discordOAuthConfigured"] is True
+    finally:
+        _stop_server(httpd)
+
+
+def test_discord_oauth_start_redirects_with_signed_state(monkeypatch, tmp_ledger, tmp_wallets):
+    monkeypatch.setenv("GODFORGE_ADMIN_PASSWORD", "secret-test")
+    monkeypatch.setenv("DISCORD_CLIENT_ID", "1493371999031136318")
+    monkeypatch.setenv("DISCORD_CLIENT_SECRET", "oauth-secret")
+    monkeypatch.setenv("DISCORD_OAUTH_REDIRECT_URI", "https://godforge-hub.up.railway.app/api/auth/discord/callback")
+    httpd, base = _start_server()
+    try:
+        status, payload, headers = _request("GET", f"{base}/api/auth/discord/start", follow_redirects=False)
+        location = headers["Location"]
+        parsed = urllib.parse.urlparse(location)
+        query = urllib.parse.parse_qs(parsed.query)
+        state_cookie = headers["Set-Cookie"].split(";", 1)[0].split("=", 1)[1]
+
+        assert status == 302
+        assert parsed.netloc == "discord.com"
+        assert query["client_id"] == ["1493371999031136318"]
+        assert query["redirect_uri"] == ["https://godforge-hub.up.railway.app/api/auth/discord/callback"]
+        assert query["scope"] == ["identify guilds"]
+        assert web_server._verify_oauth_state(query["state"][0], state_cookie)
+    finally:
+        _stop_server(httpd)
+
+
+def test_discord_oauth_callback_rejects_bad_state(monkeypatch, tmp_ledger, tmp_wallets):
+    monkeypatch.setenv("GODFORGE_ADMIN_PASSWORD", "secret-test")
+    monkeypatch.setenv("DISCORD_CLIENT_ID", "1493371999031136318")
+    monkeypatch.setenv("DISCORD_CLIENT_SECRET", "oauth-secret")
+    monkeypatch.setenv("DISCORD_OAUTH_REDIRECT_URI", "https://godforge-hub.up.railway.app/api/auth/discord/callback")
+    httpd, base = _start_server()
+    try:
+        status, payload, headers = _request(
+            "GET",
+            f"{base}/api/auth/discord/callback?code=abc&state=bad",
+            cookie=f"{web_server.OAUTH_STATE_COOKIE}=also-bad",
+            follow_redirects=False,
+        )
+
+        assert status == 302
+        assert "failed:invalid_oauth_state" in headers["Location"]
+    finally:
+        _stop_server(httpd)
+
+
+def test_discord_oauth_callback_sets_admin_session(monkeypatch, tmp_ledger, tmp_wallets):
+    monkeypatch.setenv("GODFORGE_ADMIN_PASSWORD", "secret-test")
+    monkeypatch.setenv("DISCORD_CLIENT_ID", "1493371999031136318")
+    monkeypatch.setenv("DISCORD_CLIENT_SECRET", "oauth-secret")
+    monkeypatch.setenv("DISCORD_OAUTH_REDIRECT_URI", "https://godforge-hub.up.railway.app/api/auth/discord/callback")
+    monkeypatch.setattr(web_server, "_exchange_discord_code", lambda code: {"access_token": f"token-{code}"})
+    monkeypatch.setattr(web_server, "_fetch_discord_user", lambda token: {"id": "42", "username": "AtlasMain"})
+    state = "state-test"
+    state_cookie = web_server._sign_oauth_state(state)
+    httpd, base = _start_server()
+    try:
+        status, payload, headers = _request(
+            "GET",
+            f"{base}/api/auth/discord/callback?code=abc&state={state}",
+            cookie=f"{web_server.OAUTH_STATE_COOKIE}={state_cookie}",
+            follow_redirects=False,
+        )
+        session_cookie = headers["Set-Cookie"].split(";", 1)[0].split("=", 1)[1]
+
+        assert status == 302
+        assert headers["Location"] == "/#dashboard?auth=discord"
+        assert web_server._verify_session(session_cookie)
     finally:
         _stop_server(httpd)
 
