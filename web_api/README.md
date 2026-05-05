@@ -89,7 +89,7 @@ POST /api/admin/sync/ledger
 
 `GET /api/settings` and `POST /api/settings` provide temporary JSON-backed guild settings for the admin dashboard. They are scoped by `guild_id`, default to `global`, and are intended to be replaced by Discord OAuth, guild permissions, and database-backed settings later.
 
-`GET /api/commands/custom`, `POST /api/commands/custom`, and `POST /api/commands/custom/delete` provide temporary JSON-backed custom command configuration. They do not execute in Discord until the bot-side custom command resolver is implemented.
+`GET /api/commands/custom`, `POST /api/commands/custom`, and `POST /api/commands/custom/delete` provide temporary custom command configuration. Unknown dot commands in Discord can execute matching enabled configs with channel gates, role gates, per-user cooldowns, and mention suppression.
 
 Dashboard settings, audit events, and custom command configs default to JSON. To use the stdlib SQLite document store instead:
 

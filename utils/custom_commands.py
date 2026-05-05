@@ -1,8 +1,8 @@
 """
 Temporary custom command configuration persistence for the web dashboard.
 
-Bot-side execution is intentionally not wired yet. These JSON-backed records
-stage the schema and admin surface for future Discord guild-scoped commands.
+These records are created through the admin dashboard and read by the Discord
+bot when an unknown dot command is seen.
 """
 
 from __future__ import annotations

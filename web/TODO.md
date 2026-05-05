@@ -23,6 +23,7 @@ Release/version update locations are documented in `../RELEASE_PROCESS.md`. The 
 - Added a production readiness panel for auth, guild permissions, and database gates.
 - Added Bot Masters permission staging for role labels and future monetization access levels.
 - Added temporary dashboard-backed custom command configuration staging.
+- Added bot-side custom command execution for unknown dot commands with enabled state, channel gates, role gates, cooldowns, and mention suppression.
 - Staged Discord OAuth, combined Railway hosting, and optional SQLite dashboard storage while keeping secrets and production assets out of git.
 
 ## Bot Command Surface Parity
@@ -40,7 +41,8 @@ Release/version update locations are documented in `../RELEASE_PROCESS.md`. The 
 | `.wallet give/take/set` | Betting Panel | `POST /api/wallet/adjust` | Wired |
 | `.wallet check` | Betting Panel | `GET /api/wallets` | Wired |
 | `.ledger reset` | Betting Panel | `POST /api/ledger/reset` | Wired |
-| `.ledger post` | Betting Panel | - | Not yet scoped; Discord embed only |
+| `.ledger post` | Betting Panel | `POST /api/admin/sync/ledger` | Wired as protected admin sync action |
+| Custom dashboard commands | Command Config | `GET/POST /api/commands/custom` | Wired for dashboard config and Discord execution |
 
 ## Morning Priority
 
@@ -76,10 +78,10 @@ Release/version update locations are documented in `../RELEASE_PROCESS.md`. The 
 
 - Define a custom command schema: trigger, response, enabled state, channel scope, role gate, cooldown, and audit metadata.
 - Custom command schema is staged in `data/custom_commands.json`.
-- Add a bot-side resolver before unknown commands are silently ignored.
-- Enforce guild/channel/role/cooldown checks in the bot before responding.
-- Add conflict handling for built-in commands and duplicate custom triggers.
-- Add tests for create, update, disable, delete, conflict, and permission behavior.
+- Expand custom command responses beyond static text only after guild-scoped permissions are live.
+- Replace role labels with Discord role IDs after OAuth guild authorization is complete.
+- Add duplicate-trigger UX polish in the dashboard when editing existing commands.
+- Add end-to-end browser coverage for create, disable, delete, and Discord execution.
 
 ## Shared Web API for Bot Logic
 

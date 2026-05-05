@@ -1,10 +1,10 @@
 """
-Local development API for the Godforge website prototype.
+Development and Railway API bridge for the Godforge dashboard.
 
 This server intentionally uses only the Python standard library plus the
-existing repo modules so it does not add production dependencies or deployment
-settings. It is local-only until auth, storage, and deployment decisions are
-made.
+existing repo modules so it does not add production dependencies. It can run
+locally or through the combined Railway launcher with temporary auth and
+dashboard storage.
 """
 
 from __future__ import annotations

@@ -51,7 +51,7 @@ After login, the Overview panel includes a MEE6-style operations monitor with bo
 
 The Settings module now saves temporary guild defaults to `data/guild_settings.json`: feature toggles, channel names, and admin/captain role labels. This is the staging surface for the future Discord OAuth server picker and database-backed guild settings.
 
-The Command Config module saves temporary custom command configs to `data/custom_commands.json`. These configs are not executed by the bot yet; they stage the schema for future guild-scoped custom command execution.
+The Command Config module saves temporary custom command configs to `data/custom_commands.json` or SQLite. Unknown dot commands in Discord can execute these configs with enabled state, channel gates, role gates, per-user cooldowns, and mention suppression.
 
 Dashboard settings, audit, and custom command configs can use SQLite instead of JSON by setting:
 
@@ -129,5 +129,5 @@ npm run test:dashboard
 - Production asset slots and naming guidance are documented in `ASSET_MANIFEST.md`.
 - The temporary password login should be removed once Discord OAuth plus guild permission checks fully gate admin actions.
 - Settings, audit, and custom commands use JSON by default or SQLite when enabled; multi-guild production should keep SQLite/Postgres-style durable storage enabled.
-- Temporary custom command configs persist through the dashboard but need bot-side resolver work before Discord execution.
+- Temporary custom command configs persist through the dashboard and execute in Discord for unknown dot commands; future work should replace the simple role labels with Discord OAuth guild permission checks.
 - Production graphics can be mapped into the named asset slots: `god-card`, `item-card`, `role-icon`, `dashboard-hero`, `background-texture`, and future in-game map surfaces.
