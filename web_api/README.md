@@ -1,6 +1,6 @@
 # Godforge Local Web API
 
-Local development API for the Godforge website prototype.
+Development and Railway API bridge for the Godforge dashboard.
 
 This API reuses the existing Python bot logic where practical:
 
@@ -12,7 +12,7 @@ This API reuses the existing Python bot logic where practical:
 - `utils.ledger`
 - `utils.wallet`
 
-It is intentionally local-only for now. It does not implement Discord OAuth, guild authorization, persistent settings, or production deployment.
+It can run locally through `web_api/server.py` or live through the combined Railway launcher. It implements temporary password sessions, staged Discord OAuth login, protected admin endpoints, and dashboard persistence through JSON or SQLite. Full guild permission enforcement is still future work.
 
 ## Run
 

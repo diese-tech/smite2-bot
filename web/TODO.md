@@ -15,15 +15,15 @@ Release/version update locations are documented in `../RELEASE_PROCESS.md`. The 
 - Added Match Ops and Betting dashboard modules with local API fallback data.
 - Added a development-only `web_api` bridge around existing parser, loader, picker, resolver, draft, ledger, and wallet modules.
 - Added protected admin operations telemetry and a manual Discord ledger embed sync control for the combined Railway process.
-- Added temporary JSON-backed guild settings for feature toggles, channel labels, and admin/captain role labels.
-- Added a temporary JSON-backed admin audit feed for dashboard actions.
+- Added temporary dashboard-backed guild settings for feature toggles, channel labels, and admin/captain role labels.
+- Added a temporary dashboard-backed admin audit feed for dashboard actions.
 - Added a MEE6-inspired managed-server selector grid fed by live bot guild telemetry.
 - Grouped the dashboard sidebar into MEE6-style module categories with live/staged status markers.
 - Added local selected-server state in the sidebar as a placeholder for future Discord OAuth guild scoping.
 - Added a production readiness panel for auth, guild permissions, and database gates.
 - Added Bot Masters permission staging for role labels and future monetization access levels.
-- Added temporary JSON-backed custom command configuration staging.
-- Kept Discord auth, storage, deployment, secrets, bot runtime files, and production assets untouched.
+- Added temporary dashboard-backed custom command configuration staging.
+- Staged Discord OAuth, combined Railway hosting, and optional SQLite dashboard storage while keeping secrets and production assets out of git.
 
 ## Bot Command Surface Parity
 
@@ -47,27 +47,27 @@ Release/version update locations are documented in `../RELEASE_PROCESS.md`. The 
 - Watch GitHub/Railway after each pushed batch and verify the live dashboard still serves public tools plus protected admin modules.
 - Continue the MEE6-style dashboard pass: server selector states, module cards, audit activity, permission placeholders, and guild-scoped settings scaffolding.
 - Run the local Python API and verify every web endpoint against real bot data after each admin surface expansion.
-- Replace `data/guild_settings.json` with a real database before multi-guild production use.
-- Replace `data/admin_audit.json` with durable database audit rows before serious multi-admin use.
-- SQLite dashboard document storage is staged behind `GODFORGE_STORAGE=sqlite` and `GODFORGE_DB_PATH=/app/data/godforge_dashboard.db`.
+- Keep SQLite dashboard document storage enabled in Railway with `GODFORGE_STORAGE=sqlite` and `GODFORGE_DB_PATH=/app/data/godforge_dashboard.db`.
+- Replace local JSON fallback storage with durable SQLite/Postgres storage before serious multi-admin use.
+- Add migration/export tooling before changing storage formats again.
 - Use `ASSET_MANIFEST.md` when owned graphics are available, especially god cards, item cards, role icons, and in-game map surfaces for rolls, drafts, and builds.
 
 ## Discord OAuth and Guild Authorization
 
-- Create a Discord OAuth application for the web portal.
+- Discord OAuth application is configured for the web portal.
 - Railway public URL: `https://godforge-hub.up.railway.app`.
 - Discord client id: `1493371999031136318`.
-- Planned OAuth callback: `https://godforge-hub.up.railway.app/api/auth/discord/callback`.
-- Add `DISCORD_CLIENT_SECRET` directly in Railway when OAuth implementation starts; do not commit it.
-- Add login with Discord using the `identify` and `guilds` scopes.
-- Local OAuth endpoints are staged: `GET /api/auth/discord/start` and `GET /api/auth/discord/callback`.
+- OAuth callback: `https://godforge-hub.up.railway.app/api/auth/discord/callback`.
+- Keep `DISCORD_CLIENT_SECRET` in Railway only; do not commit it.
+- Login with Discord is staged using the `identify` and `guilds` scopes.
+- OAuth endpoints are staged: `GET /api/auth/discord/start` and `GET /api/auth/discord/callback`.
 - Show only guilds where the user has the required manage/admin permission.
 - Verify the Godforge bot is installed before allowing server settings edits.
 - Add a clear install flow for guilds that do not have the bot yet.
 
 ## Per-Server Settings Storage
 
-- Choose storage for guild settings, custom commands, dashboard preferences, and asset mappings.
+- Keep settings, custom commands, dashboard preferences, and future asset mappings in the dashboard storage layer.
 - Store settings by Discord guild ID.
 - Track who changed settings and when.
 - Add server-level defaults for role pools, source preference, channels, match rules, and feature toggles.

@@ -1,10 +1,10 @@
 # Godforge Website
 
-Static local landing page and admin portal prototype for the Godforge Discord bot.
+Static landing page and admin portal for the Godforge Discord bot.
 
 This folder is intentionally separate from the Python bot runtime. It does not change `bot.py`, `requirements.txt`, `Procfile`, environment variables, or deployment settings.
 
-The dashboard, custom-command builder, Discord connection controls, and portal controls do not authenticate with Discord, persist data, deploy anywhere, or register bot commands. Future production work is tracked in `TODO.md`.
+The dashboard now runs locally or through the combined Railway launcher. Public randomizer/build tools stay open, while admin actions use a temporary password session or staged Discord OAuth session. Dashboard settings, audit events, and custom command configs persist to JSON by default, or to SQLite when `GODFORGE_STORAGE=sqlite` is enabled. Future guild-scoped authorization, bot-side custom command execution, and production asset work are tracked in `TODO.md`.
 
 Product-level release milestones are tracked in `../VERSION_HISTORY.md`. The ledger system is v2.0; dashboard bridge work is staged as v2.1.0 candidate work, to be tagged after OAuth and DB-backed dashboard basics are working.
 
@@ -78,19 +78,19 @@ Current Railway public URL:
 https://godforge-hub.up.railway.app
 ```
 
-Planned Discord OAuth callback:
+Discord OAuth callback:
 
 ```text
 https://godforge-hub.up.railway.app/api/auth/discord/callback
 ```
 
-Planned Discord OAuth client id:
+Discord OAuth client id:
 
 ```text
 1493371999031136318
 ```
 
-Do not commit the Discord client secret. Add it directly to Railway as `DISCORD_CLIENT_SECRET` when OAuth implementation starts.
+Do not commit the Discord client secret. Add it directly to Railway as `DISCORD_CLIENT_SECRET`.
 
 OAuth Railway variables:
 
@@ -127,7 +127,7 @@ npm run test:dashboard
 - The randomizer currently uses SmiteFire CDN god portraits for visual context.
 - Dashboard data shapes are documented in `DATA_CONTRACT.md`.
 - Production asset slots and naming guidance are documented in `ASSET_MANIFEST.md`.
-- The temporary admin login is password-cookie based and should be replaced by Discord OAuth plus guild permission checks.
-- Temporary settings storage is JSON-backed and should move to a real database before multi-guild production use.
-- Temporary custom command configs are JSON-backed and need bot-side resolver work before Discord execution.
+- The temporary password login should be removed once Discord OAuth plus guild permission checks fully gate admin actions.
+- Settings, audit, and custom commands use JSON by default or SQLite when enabled; multi-guild production should keep SQLite/Postgres-style durable storage enabled.
+- Temporary custom command configs persist through the dashboard but need bot-side resolver work before Discord execution.
 - Production graphics can be mapped into the named asset slots: `god-card`, `item-card`, `role-icon`, `dashboard-hero`, `background-texture`, and future in-game map surfaces.
