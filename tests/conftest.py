@@ -5,12 +5,16 @@ All Discord objects are mocked — no real Discord connection is made.
 All file I/O uses tmp_path — no real data files are touched.
 """
 import json
+import os
 import sys
 import types
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+
+# Ensure bot module can import in test environment with explicit token guard.
+os.environ.setdefault("DISCORD_TOKEN", "test-token")
 
 
 # ---------------------------------------------------------------------------

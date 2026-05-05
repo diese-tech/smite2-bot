@@ -1,0 +1,552 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.19, pytest-9.0.2, pluggy-1.6.0 -- /root/.pyenv/versions/3.10.19/bin/python
+cachedir: .pytest_cache
+rootdir: /workspace/godforge
+configfile: pytest.ini
+testpaths: tests
+collecting ... collected 96 items
+
+tests/integration/test_match_create_flow.py::test_full_flow_creates_match_and_posts_ledger FAILED [  1%]
+tests/integration/test_match_create_flow.py::test_db_saved_before_ledger_posts FAILED [  2%]
+tests/integration/test_match_create_flow.py::test_ledger_post_failure_does_not_prevent_match_creation FAILED [  3%]
+tests/integration/test_match_create_flow.py::test_match_create_sends_confirmation_message FAILED [  4%]
+tests/integration/test_match_create_flow.py::test_non_admin_cannot_create_match FAILED [  5%]
+tests/integration/test_web_api_admin_bridge.py::test_public_health_and_tool_endpoints_do_not_require_auth PASSED [  6%]
+tests/integration/test_web_api_admin_bridge.py::test_protected_admin_endpoints_reject_unauthenticated_writes PASSED [  7%]
+tests/integration/test_web_api_admin_bridge.py::test_wrong_password_does_not_unlock_admin_endpoints PASSED [  8%]
+tests/integration/test_web_api_admin_bridge.py::test_auth_status_reports_discord_oauth_configuration PASSED [  9%]
+tests/integration/test_web_api_admin_bridge.py::test_discord_oauth_start_redirects_with_signed_state PASSED [ 10%]
+tests/integration/test_web_api_admin_bridge.py::test_discord_oauth_callback_rejects_bad_state PASSED [ 11%]
+tests/integration/test_web_api_admin_bridge.py::test_discord_oauth_callback_sets_admin_session PASSED [ 12%]
+tests/integration/test_web_api_admin_bridge.py::test_tampered_admin_cookie_is_rejected PASSED [ 13%]
+tests/integration/test_web_api_admin_bridge.py::test_static_file_lookup_rejects_path_traversal PASSED [ 14%]
+tests/integration/test_web_api_admin_bridge.py::test_admin_status_reports_data_counts_and_requires_auth PASSED [ 15%]
+tests/integration/test_web_api_admin_bridge.py::test_admin_status_module_health_reflects_saved_settings PASSED [ 16%]
+tests/integration/test_web_api_admin_bridge.py::test_admin_status_reports_limited_guild_telemetry PASSED [ 17%]
+tests/integration/test_web_api_admin_bridge.py::test_manual_ledger_sync_is_protected_and_schedules_refresh PASSED [ 18%]
+tests/integration/test_web_api_admin_bridge.py::test_settings_read_write_requires_auth_and_persists PASSED [ 19%]
+tests/integration/test_web_api_admin_bridge.py::test_dashboard_storage_defaults_to_json PASSED [ 20%]
+tests/integration/test_web_api_admin_bridge.py::test_sqlite_dashboard_storage_persists_settings_audit_and_commands PASSED [ 21%]
+tests/integration/test_web_api_admin_bridge.py::test_settings_rejects_bad_guild_ids_and_control_characters PASSED [ 22%]
+tests/integration/test_web_api_admin_bridge.py::test_admin_audit_requires_auth_and_records_mutations PASSED [ 23%]
+tests/integration/test_web_api_admin_bridge.py::test_custom_command_configs_are_protected_persisted_and_deletable PASSED [ 25%]
+tests/integration/test_web_api_admin_bridge.py::test_custom_command_configs_reject_conflicts_and_malicious_payloads PASSED [ 26%]
+tests/integration/test_web_api_admin_bridge.py::test_audit_log_sanitizes_and_trims_malicious_metadata PASSED [ 27%]
+tests/integration/test_web_api_admin_bridge.py::test_admin_mutations_schedule_discord_ledger_refresh PASSED [ 28%]
+tests/integration/test_web_api_admin_bridge.py::test_reset_preserves_embed_pointer_for_in_place_discord_update PASSED [ 29%]
+tests/integration/test_web_api_admin_bridge.py::test_malicious_bet_payloads_do_not_debit_wallet_or_write_bets PASSED [ 30%]
+tests/simulations/test_admin_commands.py::test_match_draft_happy_path FAILED [ 31%]
+tests/simulations/test_admin_commands.py::test_match_draft_nonexistent_match FAILED [ 32%]
+tests/simulations/test_admin_commands.py::test_match_draft_wrong_status FAILED [ 33%]
+tests/simulations/test_admin_commands.py::test_match_resolve_winner_happy_path FAILED [ 34%]
+tests/simulations/test_admin_commands.py::test_match_resolve_winner_unknown_winner FAILED [ 35%]
+tests/simulations/test_admin_commands.py::test_match_resolve_winner_wrong_status FAILED [ 36%]
+tests/simulations/test_admin_commands.py::test_wallet_give FAILED        [ 37%]
+tests/simulations/test_admin_commands.py::test_wallet_take FAILED        [ 38%]
+tests/simulations/test_admin_commands.py::test_wallet_set FAILED         [ 39%]
+tests/simulations/test_admin_commands.py::test_wallet_check_existing FAILED [ 40%]
+tests/simulations/test_admin_commands.py::test_wallet_check_no_wallet FAILED [ 41%]
+tests/simulations/test_admin_commands.py::test_wallet_wipe FAILED        [ 42%]
+tests/simulations/test_admin_commands.py::test_ledger_reset FAILED       [ 43%]
+tests/simulations/test_normal_user_bets.py::test_first_time_better_is_seeded FAILED [ 44%]
+tests/simulations/test_normal_user_bets.py::test_win_bet_happy_path FAILED [ 45%]
+tests/simulations/test_normal_user_bets.py::test_prop_bet_happy_path FAILED [ 46%]
+tests/simulations/test_normal_user_bets.py::test_bet_blocked_in_wrong_channel FAILED [ 47%]
+tests/simulations/test_normal_user_bets.py::test_bet_allowed_any_channel_when_unconfigured FAILED [ 48%]
+tests/simulations/test_normal_user_bets.py::test_bet_blocked_zero_balance FAILED [ 50%]
+tests/simulations/test_normal_user_bets.py::test_bet_blocked_overdraft FAILED [ 51%]
+tests/simulations/test_normal_user_bets.py::test_bet_invalid_amount_not_a_number FAILED [ 52%]
+tests/simulations/test_normal_user_bets.py::test_bet_zero_amount_rejected FAILED [ 53%]
+tests/simulations/test_normal_user_bets.py::test_bet_nonexistent_match FAILED [ 54%]
+tests/simulations/test_normal_user_bets.py::test_bet_blocked_on_locked_match FAILED [ 55%]
+tests/simulations/test_normal_user_bets.py::test_win_bet_unknown_team FAILED [ 56%]
+tests/simulations/test_normal_user_bets.py::test_normal_user_blocked_from_wallet_give FAILED [ 57%]
+tests/simulations/test_normal_user_bets.py::test_normal_user_blocked_from_ledger_reset FAILED [ 58%]
+tests/simulations/test_normal_user_bets.py::test_dm_context_no_guild_permissions FAILED [ 59%]
+tests/simulations/test_server_configs.py::test_franks_server_bet_in_correct_channel FAILED [ 60%]
+tests/simulations/test_server_configs.py::test_franks_server_bet_in_wrong_channel FAILED [ 61%]
+tests/simulations/test_server_configs.py::test_franks_server_admin_creates_match FAILED [ 62%]
+tests/simulations/test_server_configs.py::test_misconfigured_no_bet_channel_allows_bets_anywhere FAILED [ 63%]
+tests/simulations/test_server_configs.py::test_misconfigured_no_ledger_channel_informs_admin FAILED [ 64%]
+tests/simulations/test_server_configs.py::test_misconfigured_wrong_ledger_channel_id_informs_admin FAILED [ 65%]
+tests/simulations/test_server_configs.py::test_custom_server_full_bet_flow FAILED [ 66%]
+tests/simulations/test_server_configs.py::test_custom_server_old_bets_channel_rejected FAILED [ 67%]
+tests/unit/test_god_rights.py::test_god_user_passes_without_server_perms PASSED [ 68%]
+tests/unit/test_god_rights.py::test_god_user_passes_in_dm_context PASSED [ 69%]
+tests/unit/test_god_rights.py::test_regular_admin_still_passes PASSED    [ 70%]
+tests/unit/test_god_rights.py::test_regular_user_still_blocked PASSED    [ 71%]
+tests/unit/test_god_rights.py::test_different_user_id_not_granted PASSED [ 72%]
+tests/unit/test_help_version.py::test_help_footer_uses_central_release_version PASSED [ 73%]
+tests/unit/test_ledger_posting.py::test_update_embed_posts_new_message FAILED [ 75%]
+tests/unit/test_ledger_posting.py::test_update_embed_edits_existing_message FAILED [ 76%]
+tests/unit/test_ledger_posting.py::test_reset_ledger_preserves_embed_pointer PASSED [ 77%]
+tests/unit/test_ledger_posting.py::test_update_embed_notifies_when_channel_id_zero FAILED [ 78%]
+tests/unit/test_ledger_posting.py::test_update_embed_notifies_when_channel_not_found FAILED [ 79%]
+tests/unit/test_ledger_posting.py::test_update_embed_falls_through_on_message_not_found FAILED [ 80%]
+tests/unit/test_ledger_posting.py::test_update_embed_forbidden_on_send_notifies FAILED [ 81%]
+tests/unit/test_match_creation.py::test_create_match_saves_to_ledger PASSED [ 82%]
+tests/unit/test_match_creation.py::test_create_match_returns_match_dict PASSED [ 83%]
+tests/unit/test_match_creation.py::test_create_match_increments_id PASSED [ 84%]
+tests/unit/test_match_creation.py::test_no_duplicate_prevention PASSED   [ 85%]
+tests/unit/test_match_creation.py::test_match_create_command_missing_teams FAILED [ 86%]
+tests/unit/test_team_matching.py::test_plain_text_no_at_sign PASSED      [ 87%]
+tests/unit/test_team_matching.py::test_plain_text_other_team PASSED      [ 88%]
+tests/unit/test_team_matching.py::test_plain_text_case_insensitive PASSED [ 89%]
+tests/unit/test_team_matching.py::test_role_mention_still_works PASSED   [ 90%]
+tests/unit/test_team_matching.py::test_user_mention_still_works PASSED   [ 91%]
+tests/unit/test_team_matching.py::test_at_prefix_in_text_still_works PASSED [ 92%]
+tests/unit/test_team_matching.py::test_longer_name_wins_over_substring PASSED [ 93%]
+tests/unit/test_team_matching.py::test_no_match_returns_none PASSED      [ 94%]
+tests/unit/test_team_matching.py::test_quoted_team_names PASSED          [ 95%]
+tests/unit/test_team_matching.py::test_quoted_single_team PASSED         [ 96%]
+tests/unit/test_team_matching.py::test_role_mention_extraction PASSED    [ 97%]
+tests/unit/test_team_matching.py::test_legacy_at_word_extraction PASSED  [ 98%]
+tests/unit/test_team_matching.py::test_role_mention_takes_priority_over_quotes PASSED [100%]
+
+=================================== FAILURES ===================================
+________________ test_full_flow_creates_match_and_posts_ledger _________________
+async def functions are not natively supported.
+You need to install a suitable plugin for your async framework, for example:
+  - anyio
+  - pytest-asyncio
+  - pytest-tornasync
+  - pytest-trio
+  - pytest-twisted
+______________________ test_db_saved_before_ledger_posts _______________________
+async def functions are not natively supported.
+You need to install a suitable plugin for your async framework, for example:
+  - anyio
+  - pytest-asyncio
+  - pytest-tornasync
+  - pytest-trio
+  - pytest-twisted
+___________ test_ledger_post_failure_does_not_prevent_match_creation ___________
+async def functions are not natively supported.
+You need to install a suitable plugin for your async framework, for example:
+  - anyio
+  - pytest-asyncio
+  - pytest-tornasync
+  - pytest-trio
+  - pytest-twisted
+_________________ test_match_create_sends_confirmation_message _________________
+async def functions are not natively supported.
+You need to install a suitable plugin for your async framework, for example:
+  - anyio
+  - pytest-asyncio
+  - pytest-tornasync
+  - pytest-trio
+  - pytest-twisted
+______________________ test_non_admin_cannot_create_match ______________________
+async def functions are not natively supported.
+You need to install a suitable plugin for your async framework, for example:
+  - anyio
+  - pytest-asyncio
+  - pytest-tornasync
+  - pytest-trio
+  - pytest-twisted
+_________________________ test_match_draft_happy_path __________________________
+async def functions are not natively supported.
+You need to install a suitable plugin for your async framework, for example:
+  - anyio
+  - pytest-asyncio
+  - pytest-tornasync
+  - pytest-trio
+  - pytest-twisted
+______________________ test_match_draft_nonexistent_match ______________________
+async def functions are not natively supported.
+You need to install a suitable plugin for your async framework, for example:
+  - anyio
+  - pytest-asyncio
+  - pytest-tornasync
+  - pytest-trio
+  - pytest-twisted
+________________________ test_match_draft_wrong_status _________________________
+async def functions are not natively supported.
+You need to install a suitable plugin for your async framework, for example:
+  - anyio
+  - pytest-asyncio
+  - pytest-tornasync
+  - pytest-trio
+  - pytest-twisted
+_____________________ test_match_resolve_winner_happy_path _____________________
+async def functions are not natively supported.
+You need to install a suitable plugin for your async framework, for example:
+  - anyio
+  - pytest-asyncio
+  - pytest-tornasync
+  - pytest-trio
+  - pytest-twisted
+___________________ test_match_resolve_winner_unknown_winner ___________________
+async def functions are not natively supported.
+You need to install a suitable plugin for your async framework, for example:
+  - anyio
+  - pytest-asyncio
+  - pytest-tornasync
+  - pytest-trio
+  - pytest-twisted
+____________________ test_match_resolve_winner_wrong_status ____________________
+async def functions are not natively supported.
+You need to install a suitable plugin for your async framework, for example:
+  - anyio
+  - pytest-asyncio
+  - pytest-tornasync
+  - pytest-trio
+  - pytest-twisted
+_______________________________ test_wallet_give _______________________________
+async def functions are not natively supported.
+You need to install a suitable plugin for your async framework, for example:
+  - anyio
+  - pytest-asyncio
+  - pytest-tornasync
+  - pytest-trio
+  - pytest-twisted
+_______________________________ test_wallet_take _______________________________
+async def functions are not natively supported.
+You need to install a suitable plugin for your async framework, for example:
+  - anyio
+  - pytest-asyncio
+  - pytest-tornasync
+  - pytest-trio
+  - pytest-twisted
+_______________________________ test_wallet_set ________________________________
+async def functions are not natively supported.
+You need to install a suitable plugin for your async framework, for example:
+  - anyio
+  - pytest-asyncio
+  - pytest-tornasync
+  - pytest-trio
+  - pytest-twisted
+__________________________ test_wallet_check_existing __________________________
+async def functions are not natively supported.
+You need to install a suitable plugin for your async framework, for example:
+  - anyio
+  - pytest-asyncio
+  - pytest-tornasync
+  - pytest-trio
+  - pytest-twisted
+_________________________ test_wallet_check_no_wallet __________________________
+async def functions are not natively supported.
+You need to install a suitable plugin for your async framework, for example:
+  - anyio
+  - pytest-asyncio
+  - pytest-tornasync
+  - pytest-trio
+  - pytest-twisted
+_______________________________ test_wallet_wipe _______________________________
+async def functions are not natively supported.
+You need to install a suitable plugin for your async framework, for example:
+  - anyio
+  - pytest-asyncio
+  - pytest-tornasync
+  - pytest-trio
+  - pytest-twisted
+______________________________ test_ledger_reset _______________________________
+async def functions are not natively supported.
+You need to install a suitable plugin for your async framework, for example:
+  - anyio
+  - pytest-asyncio
+  - pytest-tornasync
+  - pytest-trio
+  - pytest-twisted
+_______________________ test_first_time_better_is_seeded _______________________
+async def functions are not natively supported.
+You need to install a suitable plugin for your async framework, for example:
+  - anyio
+  - pytest-asyncio
+  - pytest-tornasync
+  - pytest-trio
+  - pytest-twisted
+___________________________ test_win_bet_happy_path ____________________________
+async def functions are not natively supported.
+You need to install a suitable plugin for your async framework, for example:
+  - anyio
+  - pytest-asyncio
+  - pytest-tornasync
+  - pytest-trio
+  - pytest-twisted
+___________________________ test_prop_bet_happy_path ___________________________
+async def functions are not natively supported.
+You need to install a suitable plugin for your async framework, for example:
+  - anyio
+  - pytest-asyncio
+  - pytest-tornasync
+  - pytest-trio
+  - pytest-twisted
+______________________ test_bet_blocked_in_wrong_channel _______________________
+async def functions are not natively supported.
+You need to install a suitable plugin for your async framework, for example:
+  - anyio
+  - pytest-asyncio
+  - pytest-tornasync
+  - pytest-trio
+  - pytest-twisted
+________________ test_bet_allowed_any_channel_when_unconfigured ________________
+async def functions are not natively supported.
+You need to install a suitable plugin for your async framework, for example:
+  - anyio
+  - pytest-asyncio
+  - pytest-tornasync
+  - pytest-trio
+  - pytest-twisted
+________________________ test_bet_blocked_zero_balance _________________________
+async def functions are not natively supported.
+You need to install a suitable plugin for your async framework, for example:
+  - anyio
+  - pytest-asyncio
+  - pytest-tornasync
+  - pytest-trio
+  - pytest-twisted
+__________________________ test_bet_blocked_overdraft __________________________
+async def functions are not natively supported.
+You need to install a suitable plugin for your async framework, for example:
+  - anyio
+  - pytest-asyncio
+  - pytest-tornasync
+  - pytest-trio
+  - pytest-twisted
+_____________________ test_bet_invalid_amount_not_a_number _____________________
+async def functions are not natively supported.
+You need to install a suitable plugin for your async framework, for example:
+  - anyio
+  - pytest-asyncio
+  - pytest-tornasync
+  - pytest-trio
+  - pytest-twisted
+________________________ test_bet_zero_amount_rejected _________________________
+async def functions are not natively supported.
+You need to install a suitable plugin for your async framework, for example:
+  - anyio
+  - pytest-asyncio
+  - pytest-tornasync
+  - pytest-trio
+  - pytest-twisted
+__________________________ test_bet_nonexistent_match __________________________
+async def functions are not natively supported.
+You need to install a suitable plugin for your async framework, for example:
+  - anyio
+  - pytest-asyncio
+  - pytest-tornasync
+  - pytest-trio
+  - pytest-twisted
+_______________________ test_bet_blocked_on_locked_match _______________________
+async def functions are not natively supported.
+You need to install a suitable plugin for your async framework, for example:
+  - anyio
+  - pytest-asyncio
+  - pytest-tornasync
+  - pytest-trio
+  - pytest-twisted
+__________________________ test_win_bet_unknown_team ___________________________
+async def functions are not natively supported.
+You need to install a suitable plugin for your async framework, for example:
+  - anyio
+  - pytest-asyncio
+  - pytest-tornasync
+  - pytest-trio
+  - pytest-twisted
+__________________ test_normal_user_blocked_from_wallet_give ___________________
+async def functions are not natively supported.
+You need to install a suitable plugin for your async framework, for example:
+  - anyio
+  - pytest-asyncio
+  - pytest-tornasync
+  - pytest-trio
+  - pytest-twisted
+__________________ test_normal_user_blocked_from_ledger_reset __________________
+async def functions are not natively supported.
+You need to install a suitable plugin for your async framework, for example:
+  - anyio
+  - pytest-asyncio
+  - pytest-tornasync
+  - pytest-trio
+  - pytest-twisted
+_____________________ test_dm_context_no_guild_permissions _____________________
+async def functions are not natively supported.
+You need to install a suitable plugin for your async framework, for example:
+  - anyio
+  - pytest-asyncio
+  - pytest-tornasync
+  - pytest-trio
+  - pytest-twisted
+__________________ test_franks_server_bet_in_correct_channel ___________________
+async def functions are not natively supported.
+You need to install a suitable plugin for your async framework, for example:
+  - anyio
+  - pytest-asyncio
+  - pytest-tornasync
+  - pytest-trio
+  - pytest-twisted
+___________________ test_franks_server_bet_in_wrong_channel ____________________
+async def functions are not natively supported.
+You need to install a suitable plugin for your async framework, for example:
+  - anyio
+  - pytest-asyncio
+  - pytest-tornasync
+  - pytest-trio
+  - pytest-twisted
+____________________ test_franks_server_admin_creates_match ____________________
+async def functions are not natively supported.
+You need to install a suitable plugin for your async framework, for example:
+  - anyio
+  - pytest-asyncio
+  - pytest-tornasync
+  - pytest-trio
+  - pytest-twisted
+____________ test_misconfigured_no_bet_channel_allows_bets_anywhere ____________
+async def functions are not natively supported.
+You need to install a suitable plugin for your async framework, for example:
+  - anyio
+  - pytest-asyncio
+  - pytest-tornasync
+  - pytest-trio
+  - pytest-twisted
+______________ test_misconfigured_no_ledger_channel_informs_admin ______________
+async def functions are not natively supported.
+You need to install a suitable plugin for your async framework, for example:
+  - anyio
+  - pytest-asyncio
+  - pytest-tornasync
+  - pytest-trio
+  - pytest-twisted
+___________ test_misconfigured_wrong_ledger_channel_id_informs_admin ___________
+async def functions are not natively supported.
+You need to install a suitable plugin for your async framework, for example:
+  - anyio
+  - pytest-asyncio
+  - pytest-tornasync
+  - pytest-trio
+  - pytest-twisted
+_______________________ test_custom_server_full_bet_flow _______________________
+async def functions are not natively supported.
+You need to install a suitable plugin for your async framework, for example:
+  - anyio
+  - pytest-asyncio
+  - pytest-tornasync
+  - pytest-trio
+  - pytest-twisted
+_________________ test_custom_server_old_bets_channel_rejected _________________
+async def functions are not natively supported.
+You need to install a suitable plugin for your async framework, for example:
+  - anyio
+  - pytest-asyncio
+  - pytest-tornasync
+  - pytest-trio
+  - pytest-twisted
+_____________________ test_update_embed_posts_new_message ______________________
+async def functions are not natively supported.
+You need to install a suitable plugin for your async framework, for example:
+  - anyio
+  - pytest-asyncio
+  - pytest-tornasync
+  - pytest-trio
+  - pytest-twisted
+___________________ test_update_embed_edits_existing_message ___________________
+async def functions are not natively supported.
+You need to install a suitable plugin for your async framework, for example:
+  - anyio
+  - pytest-asyncio
+  - pytest-tornasync
+  - pytest-trio
+  - pytest-twisted
+_______________ test_update_embed_notifies_when_channel_id_zero ________________
+async def functions are not natively supported.
+You need to install a suitable plugin for your async framework, for example:
+  - anyio
+  - pytest-asyncio
+  - pytest-tornasync
+  - pytest-trio
+  - pytest-twisted
+______________ test_update_embed_notifies_when_channel_not_found _______________
+async def functions are not natively supported.
+You need to install a suitable plugin for your async framework, for example:
+  - anyio
+  - pytest-asyncio
+  - pytest-tornasync
+  - pytest-trio
+  - pytest-twisted
+_____________ test_update_embed_falls_through_on_message_not_found _____________
+async def functions are not natively supported.
+You need to install a suitable plugin for your async framework, for example:
+  - anyio
+  - pytest-asyncio
+  - pytest-tornasync
+  - pytest-trio
+  - pytest-twisted
+_________________ test_update_embed_forbidden_on_send_notifies _________________
+async def functions are not natively supported.
+You need to install a suitable plugin for your async framework, for example:
+  - anyio
+  - pytest-asyncio
+  - pytest-tornasync
+  - pytest-trio
+  - pytest-twisted
+___________________ test_match_create_command_missing_teams ____________________
+async def functions are not natively supported.
+You need to install a suitable plugin for your async framework, for example:
+  - anyio
+  - pytest-asyncio
+  - pytest-tornasync
+  - pytest-trio
+  - pytest-twisted
+=============================== warnings summary ===============================
+../../root/.pyenv/versions/3.10.19/lib/python3.10/site-packages/_pytest/config/__init__.py:1428
+  /root/.pyenv/versions/3.10.19/lib/python3.10/site-packages/_pytest/config/__init__.py:1428: PytestConfigWarning: Unknown config option: asyncio_default_fixture_loop_scope
+  
+    self._warn_or_fail_if_strict(f"Unknown config option: {key}\n")
+
+../../root/.pyenv/versions/3.10.19/lib/python3.10/site-packages/_pytest/config/__init__.py:1428
+  /root/.pyenv/versions/3.10.19/lib/python3.10/site-packages/_pytest/config/__init__.py:1428: PytestConfigWarning: Unknown config option: asyncio_mode
+  
+    self._warn_or_fail_if_strict(f"Unknown config option: {key}\n")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/integration/test_match_create_flow.py::test_full_flow_creates_match_and_posts_ledger
+FAILED tests/integration/test_match_create_flow.py::test_db_saved_before_ledger_posts
+FAILED tests/integration/test_match_create_flow.py::test_ledger_post_failure_does_not_prevent_match_creation
+FAILED tests/integration/test_match_create_flow.py::test_match_create_sends_confirmation_message
+FAILED tests/integration/test_match_create_flow.py::test_non_admin_cannot_create_match
+FAILED tests/simulations/test_admin_commands.py::test_match_draft_happy_path
+FAILED tests/simulations/test_admin_commands.py::test_match_draft_nonexistent_match
+FAILED tests/simulations/test_admin_commands.py::test_match_draft_wrong_status
+FAILED tests/simulations/test_admin_commands.py::test_match_resolve_winner_happy_path
+FAILED tests/simulations/test_admin_commands.py::test_match_resolve_winner_unknown_winner
+FAILED tests/simulations/test_admin_commands.py::test_match_resolve_winner_wrong_status
+FAILED tests/simulations/test_admin_commands.py::test_wallet_give - Failed: a...
+FAILED tests/simulations/test_admin_commands.py::test_wallet_take - Failed: a...
+FAILED tests/simulations/test_admin_commands.py::test_wallet_set - Failed: as...
+FAILED tests/simulations/test_admin_commands.py::test_wallet_check_existing
+FAILED tests/simulations/test_admin_commands.py::test_wallet_check_no_wallet
+FAILED tests/simulations/test_admin_commands.py::test_wallet_wipe - Failed: a...
+FAILED tests/simulations/test_admin_commands.py::test_ledger_reset - Failed: ...
+FAILED tests/simulations/test_normal_user_bets.py::test_first_time_better_is_seeded
+FAILED tests/simulations/test_normal_user_bets.py::test_win_bet_happy_path - ...
+FAILED tests/simulations/test_normal_user_bets.py::test_prop_bet_happy_path
+FAILED tests/simulations/test_normal_user_bets.py::test_bet_blocked_in_wrong_channel
+FAILED tests/simulations/test_normal_user_bets.py::test_bet_allowed_any_channel_when_unconfigured
+FAILED tests/simulations/test_normal_user_bets.py::test_bet_blocked_zero_balance
+FAILED tests/simulations/test_normal_user_bets.py::test_bet_blocked_overdraft
+FAILED tests/simulations/test_normal_user_bets.py::test_bet_invalid_amount_not_a_number
+FAILED tests/simulations/test_normal_user_bets.py::test_bet_zero_amount_rejected
+FAILED tests/simulations/test_normal_user_bets.py::test_bet_nonexistent_match
+FAILED tests/simulations/test_normal_user_bets.py::test_bet_blocked_on_locked_match
+FAILED tests/simulations/test_normal_user_bets.py::test_win_bet_unknown_team
+FAILED tests/simulations/test_normal_user_bets.py::test_normal_user_blocked_from_wallet_give
+FAILED tests/simulations/test_normal_user_bets.py::test_normal_user_blocked_from_ledger_reset
+FAILED tests/simulations/test_normal_user_bets.py::test_dm_context_no_guild_permissions
+FAILED tests/simulations/test_server_configs.py::test_franks_server_bet_in_correct_channel
+FAILED tests/simulations/test_server_configs.py::test_franks_server_bet_in_wrong_channel
+FAILED tests/simulations/test_server_configs.py::test_franks_server_admin_creates_match
+FAILED tests/simulations/test_server_configs.py::test_misconfigured_no_bet_channel_allows_bets_anywhere
+FAILED tests/simulations/test_server_configs.py::test_misconfigured_no_ledger_channel_informs_admin
+FAILED tests/simulations/test_server_configs.py::test_misconfigured_wrong_ledger_channel_id_informs_admin
+FAILED tests/simulations/test_server_configs.py::test_custom_server_full_bet_flow
+FAILED tests/simulations/test_server_configs.py::test_custom_server_old_bets_channel_rejected
+FAILED tests/unit/test_ledger_posting.py::test_update_embed_posts_new_message
+FAILED tests/unit/test_ledger_posting.py::test_update_embed_edits_existing_message
+FAILED tests/unit/test_ledger_posting.py::test_update_embed_notifies_when_channel_id_zero
+FAILED tests/unit/test_ledger_posting.py::test_update_embed_notifies_when_channel_not_found
+FAILED tests/unit/test_ledger_posting.py::test_update_embed_falls_through_on_message_not_found
+FAILED tests/unit/test_ledger_posting.py::test_update_embed_forbidden_on_send_notifies
+FAILED tests/unit/test_match_creation.py::test_match_create_command_missing_teams
+================== 48 failed, 48 passed, 2 warnings in 12.55s ==================
