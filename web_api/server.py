@@ -23,7 +23,8 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.error import HTTPError
 from urllib.parse import parse_qs, urlencode, urlparse
-from urllib.request import Request, urlopen
+
+import aiohttp
 
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
@@ -922,25 +923,14 @@ def _verify_oauth_state(state: str, token: str) -> bool:
 
 
 def _exchange_discord_code(code: str) -> dict:
-    data = urlencode({
+    data = {
         "client_id": _discord_client_id(),
         "client_secret": _discord_client_secret(),
         "grant_type": "authorization_code",
         "code": code,
         "redirect_uri": _discord_redirect_uri(),
-    }).encode("utf-8")
-    request = Request(
-        f"{DISCORD_API_BASE}/oauth2/token",
-        data=data,
-        headers={
-            "Accept": "application/json",
-            "Content-Type": "application/x-www-form-urlencoded",
-            "User-Agent": "GodForgeDashboard/2.1",
-        },
-        method="POST",
-    )
-    with urlopen(request, timeout=8) as response:
-        return json.loads(response.read().decode("utf-8"))
+    }
+    return _run_discord_request(_discord_post_form("/oauth2/token", data))
 
 
 def _read_http_error(exc: HTTPError) -> str:
@@ -955,13 +945,41 @@ def _env(name: str, default: str = "") -> str:
 
 
 def _fetch_discord_user(access_token: str) -> dict:
-    request = Request(
-        f"{DISCORD_API_BASE}/users/@me",
-        headers={"Authorization": f"Bearer {access_token}"},
-        method="GET",
-    )
-    with urlopen(request, timeout=8) as response:
-        return json.loads(response.read().decode("utf-8"))
+    return _run_discord_request(_discord_get("/users/@me", {"Authorization": f"Bearer {access_token}"}))
+
+
+async def _discord_post_form(path: str, data: dict) -> dict:
+    timeout = aiohttp.ClientTimeout(total=8)
+    headers = {
+        "Accept": "application/json",
+        "User-Agent": "GodForgeDashboard/2.1 aiohttp",
+    }
+    async with aiohttp.ClientSession(DISCORD_API_BASE, timeout=timeout, headers=headers) as session:
+        async with session.post(path, data=data) as response:
+            return await _discord_json_response(response)
+
+
+async def _discord_get(path: str, headers: dict) -> dict:
+    timeout = aiohttp.ClientTimeout(total=8)
+    request_headers = {
+        "Accept": "application/json",
+        "User-Agent": "GodForgeDashboard/2.1 aiohttp",
+        **headers,
+    }
+    async with aiohttp.ClientSession(DISCORD_API_BASE, timeout=timeout, headers=request_headers) as session:
+        async with session.get(path) as response:
+            return await _discord_json_response(response)
+
+
+async def _discord_json_response(response: aiohttp.ClientResponse) -> dict:
+    text = await response.text()
+    if response.status >= 400:
+        raise RuntimeError(f"{response.status} {response.reason}: {text[:500]}")
+    return json.loads(text or "{}")
+
+
+def _run_discord_request(coro):
+    return asyncio.run(coro)
 
 
 def _cookie_header(token: str, name: str = SESSION_COOKIE, max_age: int = SESSION_MAX_AGE) -> str:

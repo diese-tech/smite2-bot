@@ -157,6 +157,37 @@ def test_discord_oauth_env_values_are_trimmed(monkeypatch):
     assert web_server._discord_oauth_configured() is True
 
 
+def test_discord_oauth_exchange_uses_aiohttp_form_client(monkeypatch):
+    monkeypatch.setenv("DISCORD_CLIENT_ID", "1493371999031136318")
+    monkeypatch.setenv("DISCORD_CLIENT_SECRET", "oauth-secret")
+    monkeypatch.setenv("DISCORD_OAUTH_REDIRECT_URI", "https://godforge-hub.up.railway.app/api/auth/discord/callback")
+    captured = {}
+
+    def fake_post_form(path, data):
+        captured["path"] = path
+        captured["data"] = data
+        return "pending-request"
+
+    def fake_run(request):
+        assert request == "pending-request"
+        return {"access_token": "token-abc"}
+
+    monkeypatch.setattr(web_server, "_discord_post_form", fake_post_form)
+    monkeypatch.setattr(web_server, "_run_discord_request", fake_run)
+
+    token = web_server._exchange_discord_code("abc")
+
+    assert token == {"access_token": "token-abc"}
+    assert captured["path"] == "/oauth2/token"
+    assert captured["data"] == {
+        "client_id": "1493371999031136318",
+        "client_secret": "oauth-secret",
+        "grant_type": "authorization_code",
+        "code": "abc",
+        "redirect_uri": "https://godforge-hub.up.railway.app/api/auth/discord/callback",
+    }
+
+
 def test_discord_oauth_start_redirects_with_signed_state(monkeypatch, tmp_ledger, tmp_wallets):
     monkeypatch.setenv("GODFORGE_ADMIN_PASSWORD", "secret-test")
     monkeypatch.setenv("DISCORD_CLIENT_ID", "1493371999031136318")
