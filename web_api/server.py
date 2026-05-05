@@ -745,10 +745,10 @@ def _module_health(settings: dict, ledger: dict, wallets: dict) -> list[dict]:
         {
             "key": "command-config",
             "label": "Command Config",
-            "state": "staged",
+            "state": "ready",
             "enabled": bool(features.get("botEnabled", True)),
-            "detail": "UI preview only until custom command persistence lands.",
-            "needs": ["Database storage", "Bot-side custom command resolver"],
+            "detail": "Dashboard-saved custom commands execute in Discord for unknown dot commands.",
+            "needs": [] if dashboard_store.storage_status().get("available") else ["Dashboard storage"],
         },
         {
             "key": "randomizer",
@@ -835,20 +835,34 @@ def _auth_configured() -> bool:
     return bool(_admin_password())
 
 
-def _auth_secret() -> bytes:
-    seed = _admin_password() or os.getenv("DISCORD_TOKEN", "godforge-local-dev")
+def _session_secret_raw() -> str:
+    return (
+        os.getenv("GODFORGE_SESSION_SECRET", "")
+        or _admin_password()
+        or _discord_client_secret()
+        or os.getenv("DISCORD_TOKEN", "")
+        or "godforge-local-dev"
+    )
+
+
+def _session_secret_configured() -> bool:
+    return bool(_session_secret_raw())
+
+
+def _session_secret() -> bytes:
+    seed = _session_secret_raw()
     return hashlib.sha256(seed.encode("utf-8")).digest()
 
 
 def _sign_session(expires_at: int) -> str:
     raw = str(expires_at).encode("utf-8")
-    signature = hmac.new(_auth_secret(), raw, hashlib.sha256).hexdigest()
+    signature = hmac.new(_session_secret(), raw, hashlib.sha256).hexdigest()
     token = f"{expires_at}:{signature}".encode("utf-8")
     return base64.urlsafe_b64encode(token).decode("ascii")
 
 
 def _verify_session(token: str) -> bool:
-    if not token or not _auth_configured():
+    if not token or not _session_secret_configured():
         return False
     try:
         decoded = base64.urlsafe_b64decode(token.encode("ascii")).decode("utf-8")
@@ -858,7 +872,7 @@ def _verify_session(token: str) -> bool:
         return False
     if expires_at < int(time.time()):
         return False
-    expected = hmac.new(_auth_secret(), expires_raw.encode("utf-8"), hashlib.sha256).hexdigest()
+    expected = hmac.new(_session_secret(), expires_raw.encode("utf-8"), hashlib.sha256).hexdigest()
     return hmac.compare_digest(signature, expected)
 
 
@@ -883,7 +897,7 @@ def _oauth_state() -> str:
 
 
 def _sign_oauth_state(state: str) -> str:
-    signature = hmac.new(_auth_secret(), state.encode("utf-8"), hashlib.sha256).hexdigest()
+    signature = hmac.new(_session_secret(), state.encode("utf-8"), hashlib.sha256).hexdigest()
     token = f"{state}:{signature}".encode("utf-8")
     return base64.urlsafe_b64encode(token).decode("ascii")
 
@@ -898,7 +912,7 @@ def _verify_oauth_state(state: str, token: str) -> bool:
         return False
     if not hmac.compare_digest(stored_state, state):
         return False
-    expected = hmac.new(_auth_secret(), state.encode("utf-8"), hashlib.sha256).hexdigest()
+    expected = hmac.new(_session_secret(), state.encode("utf-8"), hashlib.sha256).hexdigest()
     return hmac.compare_digest(signature, expected)
 
 

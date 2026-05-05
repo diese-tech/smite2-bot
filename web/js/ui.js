@@ -31,7 +31,7 @@ export function $all(selector, root = document) {
   return Array.from(root.querySelectorAll(selector));
 }
 
-export function showToast(message = "Demo only: Discord auth is planned, not active in this static prototype.") {
+export function showToast(message = "Action complete.") {
   const toast = $("[data-toast]");
 
   if (!toast) {

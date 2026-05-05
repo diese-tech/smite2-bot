@@ -215,6 +215,41 @@ def test_discord_oauth_callback_sets_admin_session(monkeypatch, tmp_ledger, tmp_
         _stop_server(httpd)
 
 
+def test_discord_oauth_session_unlocks_protected_endpoints_without_admin_password(monkeypatch, tmp_ledger, tmp_wallets):
+    monkeypatch.delenv("GODFORGE_ADMIN_PASSWORD", raising=False)
+    monkeypatch.setenv("DISCORD_CLIENT_ID", "1493371999031136318")
+    monkeypatch.setenv("DISCORD_CLIENT_SECRET", "oauth-secret")
+    monkeypatch.setenv("DISCORD_OAUTH_REDIRECT_URI", "https://godforge-hub.up.railway.app/api/auth/discord/callback")
+    monkeypatch.setattr(web_server, "_exchange_discord_code", lambda code: {"access_token": f"token-{code}"})
+    monkeypatch.setattr(web_server, "_fetch_discord_user", lambda token: {"id": "42", "username": "AtlasMain"})
+    state = "state-test"
+    state_cookie = web_server._sign_oauth_state(state)
+    httpd, base = _start_server()
+    try:
+        status, _payload, headers = _request(
+            "GET",
+            f"{base}/api/auth/discord/callback?code=abc&state={state}",
+            cookie=f"{web_server.OAUTH_STATE_COOKIE}={state_cookie}",
+            follow_redirects=False,
+        )
+        session_cookie = headers["Set-Cookie"].split(";", 1)[0]
+
+        assert status == 302
+        assert headers["Location"] == "/#dashboard?auth=discord"
+
+        status, auth_status, _ = _request("GET", f"{base}/api/auth/status", cookie=session_cookie)
+        assert status == 200
+        assert auth_status["authenticated"] is True
+        assert auth_status["configured"] is False
+        assert auth_status["discordOAuthConfigured"] is True
+
+        status, admin_status, _ = _request("GET", f"{base}/api/admin/status", cookie=session_cookie)
+        assert status == 200
+        assert admin_status["ok"] is True
+    finally:
+        _stop_server(httpd)
+
+
 def test_tampered_admin_cookie_is_rejected(monkeypatch, tmp_ledger, tmp_wallets):
     monkeypatch.setenv("GODFORGE_ADMIN_PASSWORD", "secret-test")
     httpd, base = _start_server()

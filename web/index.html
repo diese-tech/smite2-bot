@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta
       name="description"
-      content="Godforge is a Smite 2 Discord bot and admin portal concept for random god picks, builds, draft tools, custom commands, and match-night operations."
+      content="Godforge is a Smite 2 Discord bot and admin portal for random god picks, builds, draft tools, custom commands, and match-night operations."
     />
     <title>Godforge | Smite 2 Discord Bot and Admin Portal</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -30,7 +30,7 @@
           <a href="#commands">Commands</a>
           <a href="#roadmap">Roadmap</a>
         </nav>
-        <a class="nav-cta" href="#dashboard">Preview Dashboard</a>
+        <a class="nav-cta" href="#dashboard">Open Dashboard</a>
       </header>
 
       <main id="top">
@@ -45,18 +45,18 @@
             <p class="eyebrow">Smite 2 command center</p>
             <h1>Run the server. Roll the gods. Forge the match night.</h1>
             <p class="hero-subhead">
-              Godforge is evolving from a Discord bot into a dual-surface Smite 2 utility:
+              Godforge is a Discord bot evolving into a dual-surface Smite 2 utility:
               bot commands for live channels, plus a polished admin portal for server tools,
               command config, randomizers, and match ops.
             </p>
             <div class="hero-actions" id="cta">
-              <a class="button button-primary" href="#dashboard">Preview Dashboard</a>
-              <a class="button button-secondary" href="#" data-demo-action="connect">Connect Discord</a>
+              <a class="button button-primary" href="#dashboard">Open Dashboard</a>
+              <a class="button button-secondary" href="/api/auth/discord/start">Login with Discord</a>
             </div>
             <div class="trust-row" aria-label="Project highlights">
               <span>Bot live today</span>
-              <span>Admin portal concept</span>
-              <span>Static prototype only</span>
+              <span>Admin portal online</span>
+              <span>SQLite storage staged</span>
             </div>
           </div>
 
@@ -78,7 +78,7 @@
                   <span>Dashboard hero art slot</span>
                 </div>
                 <div class="artifact-card">
-                  <p class="artifact-label">Command preview</p>
+                  <p class="artifact-label">Command config</p>
                   <code>.scrimrules</code>
                   <p>Posts custom server rules, captains, lobby code, and draft reminder.</p>
                 </div>
@@ -101,15 +101,15 @@
           </div>
           <p>
             The bot stays the live match-night operator. The website becomes the place to
-            preview and eventually manage command config, Smite tools, server defaults,
+            manage command config, Smite tools, server defaults,
             draft presets, betting rules, and owned production graphics.
           </p>
         </section>
 
         <section class="dashboard section-wrap" id="dashboard">
           <div class="section-heading">
-            <p class="eyebrow">Admin portal preview</p>
-            <h2>A dashboard concept for server owners.</h2>
+            <p class="eyebrow">Admin portal</p>
+            <h2>A live dashboard for server owners.</h2>
           </div>
 
           <div class="dashboard-shell">
@@ -118,7 +118,7 @@
                 <span class="server-avatar" id="selected-server-avatar">S2</span>
                 <div>
                   <strong id="selected-server-name">Smite Night Arena</strong>
-                  <small id="selected-server-meta">Demo server</small>
+                  <small id="selected-server-meta">Select a managed server</small>
                 </div>
               </div>
               <div class="sidebar-section">
@@ -182,14 +182,14 @@
             <div class="dashboard-main">
               <div class="dashboard-topbar">
                 <div>
-                  <p class="eyebrow compact">Dashboard prototype</p>
+                  <p class="eyebrow compact">Dashboard</p>
                   <h3 id="dashboard-title">Overview</h3>
                 </div>
                 <div class="topbar-actions">
                   <span class="pill prototype" id="api-status">API fallback mode</span>
                   <span class="pill prototype" id="auth-status">Admin locked</span>
                   <button class="button button-secondary is-hidden" id="admin-logout" type="button">Logout</button>
-                  <button class="discord-button" type="button" data-demo-action="connect">Connect Discord</button>
+                  <a class="discord-button" href="/api/auth/discord/start">Login with Discord</a>
                 </div>
               </div>
 
@@ -197,7 +197,7 @@
                 <div>
                   <p class="eyebrow compact">Admin access</p>
                   <h4>Unlock live server controls</h4>
-                  <p>Match ops, betting, wallets, drafts, and command runner actions require the temporary admin password.</p>
+                  <p>Match ops, betting, wallets, drafts, and command actions require Discord login or the temporary admin password.</p>
                 </div>
                 <form id="admin-login-form" class="admin-login-form">
                   <label>
@@ -219,7 +219,7 @@
                   <article class="metric-card">
                     <span>Server status</span>
                     <strong>Ready</strong>
-                    <small>Visual-only connection state</small>
+                    <small>Live status after admin login</small>
                   </article>
                   <article class="metric-card">
                     <span>Asset pack</span>
@@ -234,7 +234,7 @@
                       <h4>Bot and server monitor</h4>
                     </div>
                     <div class="console-actions">
-                      <span class="pill prototype" id="admin-sync-state">Locked</span>
+                    <span class="pill prototype" id="admin-sync-state">Login required</span>
                       <button class="button button-secondary" id="admin-status-refresh" type="button">Refresh Status</button>
                       <button class="button button-primary" id="admin-sync-ledger" type="button">Sync Discord Embed</button>
                     </div>
@@ -289,9 +289,9 @@
                     <p>God picks, Roll Team, builds, sessions, drafts, betting, wallets, and ledgers stay in Discord until real portal APIs exist.</p>
                   </article>
                   <article class="portal-card">
-                    <span class="pill prototype">Portal next</span>
+                    <span class="pill live">Dashboard online</span>
                     <h4>Admins get a cleaner control surface.</h4>
-                    <p>Command defaults, role pools, match setup, and web-native Smite tools can graduate into real settings later.</p>
+                    <p>Command defaults, role pools, match setup, and web-native Smite tools now live behind dashboard auth.</p>
                   </article>
                 </div>
               </div>
@@ -343,7 +343,7 @@
                     <div class="bot-message">
                       <div class="avatar">GF</div>
                       <div class="message-card">
-                        <div class="message-kicker">Command config preview</div>
+                        <div class="message-kicker">Command config</div>
                         <strong id="preview-trigger">.scrimrules</strong>
                         <p id="preview-response">Captains post lobby code, teams confirm sides, then run .draft start @blue @red. No god swaps after lock.</p>
                         <div class="preview-meta">
@@ -860,11 +860,11 @@
           </div>
           <div class="tools-layout">
             <article class="tool-card large">
-              <span class="pill prototype">Randomizer + builds</span>
-              <h3>Roll a god, shape the build, preview the output.</h3>
+              <span class="pill live">Randomizer + builds</span>
+              <h3>Roll a god, shape the build, ship the output.</h3>
               <p>
-                This prototype keeps the web surface focused on the lowest-risk shared logic:
-                role/source randomizers and build previews. Later, a Python API can wrap the
+                This web surface keeps the tools focused on shared logic:
+                role/source randomizers and build tools. The Python API wraps the
                 existing parser, loader, and picker modules so Discord and web stay in sync.
               </p>
             </article>
@@ -884,7 +884,7 @@
         <section class="features section-wrap" id="features">
           <div class="section-heading">
             <p class="eyebrow">Core features</p>
-            <h2>Bot today, portal tomorrow, one product direction.</h2>
+            <h2>Bot commands and dashboard controls, one product direction.</h2>
           </div>
           <div class="card-grid">
             <article class="feature-card">
@@ -899,8 +899,8 @@
             </article>
             <article class="feature-card">
               <span class="icon">CC</span>
-              <h3>Command config direction</h3>
-              <p>Prototype admin UI shows how server-specific command behaviour could be managed later.</p>
+              <h3>Command config</h3>
+              <p>Server-specific custom commands save through the dashboard and execute in Discord.</p>
             </article>
             <article class="feature-card">
               <span class="icon">FD</span>
@@ -915,7 +915,7 @@
             <article class="feature-card">
               <span class="icon">UI</span>
               <h3>Web admin surface</h3>
-              <p>A future portal can expose settings and tools without crowding Discord channels.</p>
+              <p>The portal exposes settings and tools without crowding Discord channels.</p>
             </article>
           </div>
         </section>
@@ -931,12 +931,12 @@
               <p><span>Builds</span><code>.adcstr 3</code><em>three strength ADC items</em></p>
               <p><span>Sessions</span><code>.session start</code><em>enable tracked picks</em></p>
               <p><span>Draft</span><code>.draft start @blue @red</code><em>start fearless set</em></p>
-              <p><span>Custom</span><code>.scrimrules</code><em>future server-defined response</em></p>
+              <p><span>Custom</span><code>.scrimrules</code><em>server-defined response</em></p>
             </div>
             <div class="command-copy">
               <h3>One command system, two user experiences.</h3>
               <p>
-                Discord stays fast and text-native. The portal can later make setup, defaults,
+                Discord stays fast and text-native. The portal makes setup, defaults,
                 command configuration and Smite utility controls easier for admins to reason about.
               </p>
             </div>
@@ -946,7 +946,7 @@
         <section class="roadmap section-wrap" id="roadmap">
           <div class="section-heading">
             <p class="eyebrow">Roadmap</p>
-            <h2>What is real now, what is prototype, and what comes later.</h2>
+            <h2>What is live now, and what comes next.</h2>
           </div>
           <div class="roadmap-track expanded">
             <article class="roadmap-item">
@@ -955,9 +955,9 @@
               <p>Rolls, builds, drafts, sessions, betting, wallets, and ledger flows exist in the bot.</p>
             </article>
             <article class="roadmap-item">
-              <span>Prototype</span>
+              <span>Live bridge</span>
               <h3>Admin portal UI</h3>
-              <p>Static dashboard preview for server settings, command config, and web tools.</p>
+              <p>Railway-hosted dashboard for server settings, command config, match ops, and web tools.</p>
             </article>
             <article class="roadmap-item">
               <span>Backend</span>
@@ -977,7 +977,7 @@
             <article class="roadmap-item">
               <span>Assets</span>
               <h3>Production graphics</h3>
-              <p>Replace placeholders with owned god, item, role, hero, and background assets.</p>
+              <p>Replace temporary art slots with owned god, item, role, hero, and background assets.</p>
             </article>
           </div>
         </section>
@@ -985,20 +985,20 @@
         <section class="faq section-wrap" id="faq">
           <div class="section-heading">
             <p class="eyebrow">FAQ</p>
-            <h2>Prototype boundaries, clearly marked.</h2>
+            <h2>Live boundaries, clearly marked.</h2>
           </div>
           <div class="faq-list">
             <details open>
               <summary>Does this add real Discord OAuth?</summary>
-              <p>No. Connect Discord is visual-only in this prototype. Real OAuth is tracked in TODO.md.</p>
+              <p>Yes. Discord OAuth signs admins into the dashboard. Guild-level permission filtering is still tracked for the next release.</p>
             </details>
             <details>
               <summary>Is command config saved anywhere?</summary>
-              <p>No. The builder is a product demo. Bot-side command configuration storage and execution are future work.</p>
+              <p>Yes. Command configs save to dashboard storage and unknown dot commands can execute them in Discord.</p>
             </details>
             <details>
               <summary>Does the website call the bot backend?</summary>
-              <p>No. This is static HTML, CSS, and JavaScript. A shared API layer is planned later.</p>
+              <p>Yes. The Railway launcher serves the dashboard/API and runs the bot in the same service so both use the mounted data volume.</p>
             </details>
             <details>
               <summary>Where do production graphics go?</summary>
@@ -1014,7 +1014,7 @@
             <span class="brand-mark">GF</span>
             <span>Godforge</span>
           </a>
-          <p>Smite 2 Discord tooling and admin portal concepts for rolls, builds, drafts, command config, and match nights.</p>
+          <p>Smite 2 Discord tooling and admin portal controls for rolls, builds, drafts, command config, and match nights.</p>
         </div>
         <div class="footer-links">
           <a href="#dashboard">Dashboard</a>
@@ -1024,7 +1024,7 @@
       </footer>
 
       <div class="toast" role="status" aria-live="polite" data-toast>
-        Demo only: Discord auth is planned, not active in this static prototype.
+        Action complete.
       </div>
     </div>
     <script type="module" src="./js/ui.js"></script>

@@ -122,8 +122,8 @@ npm run test:dashboard
 
 ## Edit Points
 
-- Replace the placeholder `Add to Discord` links in `index.html` with the bot's Discord OAuth invite URL.
-- Replace placeholder dashboard copy as the product direction becomes clearer.
+- Keep Discord login links pointed at `/api/auth/discord/start`; add a separate bot invite URL when the install flow is ready.
+- Keep dashboard copy aligned with live behavior as auth, storage, and guild permissions evolve.
 - The randomizer currently uses SmiteFire CDN god portraits for visual context.
 - Dashboard data shapes are documented in `DATA_CONTRACT.md`.
 - Production asset slots and naming guidance are documented in `ASSET_MANIFEST.md`.
