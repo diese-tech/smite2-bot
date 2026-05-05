@@ -21,6 +21,7 @@ import sys
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+from urllib.error import HTTPError
 from urllib.parse import parse_qs, urlencode, urlparse
 from urllib.request import Request, urlopen
 
@@ -484,6 +485,10 @@ class Handler(BaseHTTPRequestHandler):
         try:
             token = _exchange_discord_code(code)
             profile = _fetch_discord_user(token["access_token"])
+        except HTTPError as exc:
+            print(f"Discord OAuth failed: {exc.code} {exc.reason}: {_read_http_error(exc)}")
+            self._redirect_with_auth_result(False, "oauth_exchange_failed")
+            return
         except Exception as exc:
             print(f"Discord OAuth failed: {exc}")
             self._redirect_with_auth_result(False, "oauth_exchange_failed")
@@ -877,15 +882,15 @@ def _verify_session(token: str) -> bool:
 
 
 def _discord_client_id() -> str:
-    return os.getenv("DISCORD_CLIENT_ID", "")
+    return _env("DISCORD_CLIENT_ID")
 
 
 def _discord_client_secret() -> str:
-    return os.getenv("DISCORD_CLIENT_SECRET", "")
+    return _env("DISCORD_CLIENT_SECRET")
 
 
 def _discord_redirect_uri() -> str:
-    return os.getenv("DISCORD_OAUTH_REDIRECT_URI", "https://godforge-hub.up.railway.app/api/auth/discord/callback")
+    return _env("DISCORD_OAUTH_REDIRECT_URI", "https://godforge-hub.up.railway.app/api/auth/discord/callback")
 
 
 def _discord_oauth_configured() -> bool:
@@ -927,11 +932,26 @@ def _exchange_discord_code(code: str) -> dict:
     request = Request(
         f"{DISCORD_API_BASE}/oauth2/token",
         data=data,
-        headers={"Content-Type": "application/x-www-form-urlencoded"},
+        headers={
+            "Accept": "application/json",
+            "Content-Type": "application/x-www-form-urlencoded",
+            "User-Agent": "GodForgeDashboard/2.1",
+        },
         method="POST",
     )
     with urlopen(request, timeout=8) as response:
         return json.loads(response.read().decode("utf-8"))
+
+
+def _read_http_error(exc: HTTPError) -> str:
+    try:
+        return exc.read().decode("utf-8", errors="replace")[:500]
+    except Exception:
+        return ""
+
+
+def _env(name: str, default: str = "") -> str:
+    return os.getenv(name, default).strip()
 
 
 def _fetch_discord_user(access_token: str) -> dict:

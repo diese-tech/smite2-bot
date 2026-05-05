@@ -146,6 +146,17 @@ def test_auth_status_reports_discord_oauth_configuration(monkeypatch, tmp_ledger
         _stop_server(httpd)
 
 
+def test_discord_oauth_env_values_are_trimmed(monkeypatch):
+    monkeypatch.setenv("DISCORD_CLIENT_ID", " 1493371999031136318 ")
+    monkeypatch.setenv("DISCORD_CLIENT_SECRET", " oauth-secret ")
+    monkeypatch.setenv("DISCORD_OAUTH_REDIRECT_URI", " https://godforge-hub.up.railway.app/api/auth/discord/callback ")
+
+    assert web_server._discord_client_id() == "1493371999031136318"
+    assert web_server._discord_client_secret() == "oauth-secret"
+    assert web_server._discord_redirect_uri() == "https://godforge-hub.up.railway.app/api/auth/discord/callback"
+    assert web_server._discord_oauth_configured() is True
+
+
 def test_discord_oauth_start_redirects_with_signed_state(monkeypatch, tmp_ledger, tmp_wallets):
     monkeypatch.setenv("GODFORGE_ADMIN_PASSWORD", "secret-test")
     monkeypatch.setenv("DISCORD_CLIENT_ID", "1493371999031136318")
