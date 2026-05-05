@@ -14,6 +14,8 @@ This API reuses the existing Python bot logic where practical:
 
 It can run locally through `web_api/server.py` or live through the combined Railway launcher. It implements temporary password sessions, staged Discord OAuth login, protected admin endpoints, and dashboard persistence through JSON or SQLite. Full guild permission enforcement is still future work.
 
+Discord OAuth token/user requests use `aiohttp`, which is already required by the Discord bot dependency chain. The remaining API surface stays dependency-light and uses the standard-library HTTP server.
+
 ## Run
 
 From the repo root:

@@ -1,10 +1,10 @@
 """
 Development and Railway API bridge for the Godforge dashboard.
 
-This server intentionally uses only the Python standard library plus the
-existing repo modules so it does not add production dependencies. It can run
-locally or through the combined Railway launcher with temporary auth and
-dashboard storage.
+This server intentionally stays dependency-light: it uses the Python standard
+library, existing repo modules, and aiohttp from the Discord bot dependency
+chain for Discord OAuth requests. It can run locally or through the combined
+Railway launcher with temporary auth and dashboard storage.
 """
 
 from __future__ import annotations
@@ -40,7 +40,7 @@ WEB_ROOT = ROOT / "web"
 SESSION_COOKIE = "godforge_admin"
 OAUTH_STATE_COOKIE = "godforge_oauth_state"
 SESSION_MAX_AGE = 60 * 60 * 12
-DISCORD_API_BASE = "https://discord.com/api"
+DISCORD_API_BASE = "https://discord.com/api/"
 
 ROLE_CODES = {
     "jungle": "j",
@@ -460,7 +460,7 @@ class Handler(BaseHTTPRequestHandler):
             "prompt": "none",
         })
         self.send_response(302)
-        self.send_header("Location", f"{DISCORD_API_BASE}/oauth2/authorize?{query}")
+        self.send_header("Location", f"{DISCORD_API_BASE}oauth2/authorize?{query}")
         self.send_header("Set-Cookie", _cookie_header(_sign_oauth_state(state), name=OAUTH_STATE_COOKIE, max_age=600))
         self.send_header("Content-Length", "0")
         self.end_headers()
@@ -955,7 +955,7 @@ async def _discord_post_form(path: str, data: dict) -> dict:
         "User-Agent": "GodForgeDashboard/2.1 aiohttp",
     }
     async with aiohttp.ClientSession(DISCORD_API_BASE, timeout=timeout, headers=headers) as session:
-        async with session.post(path, data=data) as response:
+        async with session.post(path.lstrip("/"), data=data) as response:
             return await _discord_json_response(response)
 
 
@@ -967,7 +967,7 @@ async def _discord_get(path: str, headers: dict) -> dict:
         **headers,
     }
     async with aiohttp.ClientSession(DISCORD_API_BASE, timeout=timeout, headers=request_headers) as session:
-        async with session.get(path) as response:
+        async with session.get(path.lstrip("/")) as response:
             return await _discord_json_response(response)
 
 

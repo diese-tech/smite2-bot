@@ -7,6 +7,7 @@ import json
 from pathlib import Path
 
 DATA_DIR = Path(__file__).parent.parent / "data"
+STATIC_DATA_DIR = Path(__file__).parent / "static_data"
 
 _gods_cache = None
 _builds_cache = None
@@ -16,7 +17,11 @@ _aliases_cache = None
 def _load(filename: str) -> dict:
     path = DATA_DIR / filename
     if not path.exists():
-        raise FileNotFoundError(f"Data file not found: {path}")
+        fallback = STATIC_DATA_DIR / filename
+        if fallback.exists():
+            path = fallback
+        else:
+            raise FileNotFoundError(f"Data file not found: {path}")
     with open(path, "r", encoding="utf-8") as f:
         return json.load(f)
 

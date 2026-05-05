@@ -1,0 +1,23 @@
+{
+  "_instructions": "Add shorthand aliases for god names below. Keys are lowercase aliases, values are the exact god name from gods.json. The bot checks aliases when captains type .ban or .pick during a draft. Add new aliases anytime and redeploy.",
+  "mlf": "Morgan Le Fay",
+  "swk": "Sun Wukong",
+  "kuku": "Kukulkan",
+  "rat": "Ratatoskr",
+  "batz": "Hun Batz",
+  "nem": "Nemesis",
+  "herc": "Hercules",
+  "ama": "Amaterasu",
+  "danz": "Danzaburou",
+  "jorm": "Jormungandr",
+  "xbal": "Xbalanque",
+  "cab": "Cabrakan",
+  "cerb": "Cerberus",
+  "cern": "Cernunnos",
+  "daji": "Da Ji",
+  "bs": "Baron Samedi",
+  "baron": "Baron Samedi",
+  "morri": "The Morrigan",
+  "bari": "Princess Bari",
+  "mulan": "Hua Mulan"
+}

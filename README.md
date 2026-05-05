@@ -4,6 +4,22 @@ A Discord bot for randomizing Smite 2 god picks and item builds, with session tr
 
 God picks render as colored embed cards with the god's portrait. Build commands return plaintext numbered lists.
 
+## Architecture Note
+
+Stat tracking, OCR parsing, and future betting/ledger systems have been moved to:
+
+👉 https://github.com/diese-tech/smite2-stat-bot
+
+GodForge is now intentionally scoped to:
+
+* Session tracking
+* Draft logic (picks/bans)
+* Match ID generation
+
+All post-match processing (stats, exports, ledger, betting) lives in the stat bot.
+
+This separation is deliberate to keep match orchestration lightweight and stat processing scalable.
+
 ## Commands
 
 ### Gods
