@@ -36,6 +36,8 @@ from utils import wallet as wallet_utils
 
 load_dotenv()
 TOKEN = os.getenv("DISCORD_TOKEN")
+if not TOKEN:
+    raise RuntimeError("DISCORD_TOKEN environment variable is not set.")
 ACTIVITY_BACKEND_URL = os.getenv("ACTIVITY_BACKEND_URL", "").rstrip("/")
 ACTIVITY_API_KEY = os.getenv("ACTIVITY_API_KEY", "")
 
@@ -45,8 +47,7 @@ BETTING_LEDGER_CHANNEL_ID = int(os.getenv("BETTING_LEDGER_CHANNEL_ID", "0"))
 PLACE_BETS_CHANNEL_ID = int(os.getenv("PLACE_BETS_CHANNEL_ID", "0"))
 MATCH_DRAFT_CHANNEL_ID = int(os.getenv("MATCH_DRAFT_CHANNEL_ID", "0"))
 
-# Hardcoded owner — bypasses server permission checks on all commands.
-# Temporary until the dashboard backend handles auth.
+# Single-tenant constant; update this owner ID and related checks for multi-guild/multi-tenant deployments.
 _GOD_USER_ID = 146116042182098944
 
 logging.basicConfig(
@@ -75,7 +76,7 @@ _snapshots: dict[int, dict] = {}          # channel_id -> latest state snapshot
 _board_message_ids: dict[int, int] = {}   # channel_id -> embed message id
 _ws_tasks: dict[int, asyncio.Task] = {}   # channel_id -> listener task
 
-# Server-specific reports channel.
+# Single-tenant constant map; for multi-guild deployment move to per-guild config storage.
 REPORTS_CHANNELS = {
     1129404279808073758: 1496553890181550110,  # GodForge server -> #godforge-reports
 }

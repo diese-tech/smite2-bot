@@ -10,10 +10,14 @@ Balances CAN go negative via admin .wallet take — no floor.
 """
 
 import json
+import os
+import tempfile
+import threading
 from pathlib import Path
 
 WALLETS_PATH = Path("data/wallets.json")
 SEED_AMOUNT = 500
+_WALLET_LOCK = threading.Lock()
 
 
 # ---------------------------------------------------------------------------
@@ -32,8 +36,17 @@ def load_wallets() -> dict:
 
 def save_wallets(data: dict):
     WALLETS_PATH.parent.mkdir(parents=True, exist_ok=True)
-    with open(WALLETS_PATH, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=2)
+    with _WALLET_LOCK:
+        tmp_path = None
+        try:
+            with tempfile.NamedTemporaryFile(mode="w", dir=WALLETS_PATH.parent, delete=False, suffix=".tmp", encoding="utf-8") as tmp:
+                json.dump(data, tmp, indent=2)
+                tmp.flush()
+                tmp_path = Path(tmp.name)
+            os.replace(tmp_path, WALLETS_PATH)
+        finally:
+            if tmp_path and tmp_path.exists():
+                tmp_path.unlink()
 
 
 # ---------------------------------------------------------------------------
@@ -69,11 +82,14 @@ def get_balance(user_id: int) -> int | None:
 
 def update_balance(user_id: int, delta: int) -> int:
     """Add delta to user's balance (use negative delta to subtract). Returns new balance."""
-    wallets = load_wallets()
     uid = str(user_id)
-    wallets[uid]["balance"] += delta
-    save_wallets(wallets)
-    return wallets[uid]["balance"]
+    with _WALLET_LOCK:
+        wallets = load_wallets()
+        if uid not in wallets:
+            raise KeyError(f"No wallet for user_id {user_id}. Call seed_wallet() first.")
+        wallets[uid]["balance"] += delta
+        _atomic_write_json(WALLETS_PATH, wallets)
+        return wallets[uid]["balance"]
 
 
 def set_balance(user_id: int, amount: int) -> int:
@@ -111,6 +127,20 @@ def apply_payouts(payouts: list[dict]):
     save_wallets(wallets)
 
 
+def _atomic_write_json(path: Path, data: dict):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp_path = None
+    try:
+        with tempfile.NamedTemporaryFile(mode="w", dir=path.parent, delete=False, suffix=".tmp", encoding="utf-8") as tmp:
+            json.dump(data, tmp, indent=2)
+            tmp.flush()
+            tmp_path = Path(tmp.name)
+        os.replace(tmp_path, path)
+    finally:
+        if tmp_path and tmp_path.exists():
+            tmp_path.unlink()
+
+
 def reset_all() -> int:
     """
     Reset every wallet balance to SEED_AMOUNT.
@@ -118,6 +148,8 @@ def reset_all() -> int:
     Returns count of wallets reset.
     """
     wallets = load_wallets()
+    backup_path = WALLETS_PATH.parent / "wallets.bak.json"
+    _atomic_write_json(backup_path, wallets)
     for uid in wallets:
         wallets[uid]["balance"] = SEED_AMOUNT
     save_wallets(wallets)

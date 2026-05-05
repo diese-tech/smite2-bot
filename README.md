@@ -165,6 +165,12 @@ The `#betting-ledger` channel displays a persistent paginated embed showing each
 
 ## Setup
 
+> Runtime modes:
+> - Bot-only mode: `DISCORD_TOKEN` required. Run `python bot.py`.
+> - Web API only (local dev): `PORT` optional. Run `python web_api/server.py` (protected endpoints require `GODFORGE_ADMIN_PASSWORD`).
+> - Combined Railway mode: all environment variables required. Run `python railway_app.py`.
+> - Warning: `GODFORGE_ADMIN_PASSWORD=change_me_for_dashboard` is a placeholder; dashboard auth will not be accepted until changed.
+
 1. **Install dependencies:**
    ```
    pip install -r requirements.txt

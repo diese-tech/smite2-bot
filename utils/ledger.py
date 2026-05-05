@@ -11,9 +11,15 @@ Match statuses:
 """
 
 import json
+import logging
+import os
+import tempfile
+import threading
 from pathlib import Path
 
 LEDGER_PATH = Path("data/weekly_ledger.json")
+_LEDGER_LOCK = threading.Lock()
+log = logging.getLogger("godforge.ledger")
 
 # ---------------------------------------------------------------------------
 # Raw I/O
@@ -34,10 +40,23 @@ def load_ledger() -> dict:
         return _empty_ledger()
 
 
+def _atomic_write_json(path: Path, data: dict):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp_path = None
+    try:
+        with tempfile.NamedTemporaryFile(mode="w", dir=path.parent, delete=False, suffix=".tmp", encoding="utf-8") as tmp:
+            json.dump(data, tmp, indent=2)
+            tmp.flush()
+            tmp_path = Path(tmp.name)
+        os.replace(tmp_path, path)
+    finally:
+        if tmp_path and tmp_path.exists():
+            tmp_path.unlink()
+
+
 def save_ledger(data: dict):
-    LEDGER_PATH.parent.mkdir(parents=True, exist_ok=True)
-    with open(LEDGER_PATH, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=2)
+    with _LEDGER_LOCK:
+        _atomic_write_json(LEDGER_PATH, data)
 
 
 # ---------------------------------------------------------------------------
@@ -158,6 +177,10 @@ def resolve_win_bets(match_id: str, winner: str) -> list[dict]:
     if not match:
         return []
 
+    if str(match.get("status", "")).lower() in {"completed", "settled"}:
+        log.warning("Skipping win resolution for already resolved match %s (status=%s)", match_id, match.get("status"))
+        return []
+
     win_bets = [b for b in match.get("bets", []) if b["type"] == "win"]
     winning_bets = [b for b in win_bets if b["team"].lower() == winner.lower()]
 
@@ -198,6 +221,15 @@ def resolve_prop_bets(match_id: str, player: str, stat: str,
             match = m
             break
     if not match:
+        return [], False
+
+    resolved_key = f"{player.lower()}:{stat.lower()}"
+    existing_resolved = {
+        f"{p.get('player','').lower()}:{p.get('stat','').lower()}"
+        for p in match.get("resolved_props", [])
+    }
+    if resolved_key in existing_resolved:
+        log.warning("Skipping duplicate prop resolution for %s on match %s", resolved_key, match_id)
         return [], False
 
     prop_bets = [
@@ -295,6 +327,9 @@ def all_matches_in_progress(ledger: dict | None = None) -> bool:
 def reset_ledger(preserve_embed: bool = True):
     """Wipe all matches. Wallets are unaffected."""
     current = load_ledger() if preserve_embed else _empty_ledger()
+    backup_path = LEDGER_PATH.parent / "weekly_ledger.bak.json"
+    _atomic_write_json(backup_path, load_ledger())
+    log.info("Ledger backup written to %s", backup_path)
     save_ledger({
         "matches": [],
         "embed_message_id": current.get("embed_message_id"),
